@@ -14,6 +14,8 @@ import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj.CameraServer;
 import edu.wpi.first.wpilibj.Joystick;
+import edu.wpi.first.wpilibj.Solenoid;
+
 import com.ctre.phoenix.motorcontrol.can.WPI_VictorSPX;
 
 
@@ -23,7 +25,9 @@ public class Robot extends TimedRobot {
   SpeedController FR;
   SpeedController FL;
   MecanumDrive drive; 
-  Joystick driveStick = new Joystick(0);
+  Joystick controller = new Joystick(0);
+  Solenoid sol1 = new Solenoid(0);
+  Solenoid sol2 = new Solenoid(1);
   
   @Override
   public void robotInit() {
@@ -34,6 +38,7 @@ public class Robot extends TimedRobot {
    drive = new MecanumDrive(FR, BL, FR, BR);
    CameraServer.getInstance().startAutomaticCapture("cam0",0);
    drive.setSafetyEnabled(false);
+   
 
 
 
@@ -60,8 +65,22 @@ public class Robot extends TimedRobot {
  
   @Override
   public void teleopPeriodic() {
-  }
+    if(controller.getRawButton(1)){
+      sol1.set(true);
 
+    }
+    else{
+      sol1.set(false);
+    }
+    if(controller.getRawButton(2)){
+      sol2.set(true);
+
+    }
+    else{
+      sol2.set(false);
+    }
+  }
+ 
 
   @Override
   public void testPeriodic() {
