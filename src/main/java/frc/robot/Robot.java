@@ -30,7 +30,6 @@ public class Robot extends TimedRobot {
   Solenoid sol2;
   AnalogGyro gyro;
   Compressor comp;
- MecanumDrive m_myRobot;
  PowerDistributionPanel pdp;
  
 
@@ -47,7 +46,7 @@ public class Robot extends TimedRobot {
    sol2 = new Solenoid(1);
    gyro = new AnalogGyro(0);               // creating Gyro
    comp = new Compressor(0);              // creating Compressor
-  pdp = new PowerDistributionPanel();
+  pdp = new PowerDistributionPanel();     // creating Power Distributor Panel
   
   
 
