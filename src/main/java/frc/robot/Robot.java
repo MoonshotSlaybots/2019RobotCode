@@ -18,9 +18,6 @@ import edu.wpi.first.wpilibj.Compressor;
 import edu.wpi.first.wpilibj.Joystick;
 import edu.wpi.first.wpilibj.Solenoid;
 import edu.wpi.first.wpilibj.RobotDrive;
-import edu.wpi.first.wpilibj.smartdashboard.*;
-
-
 
 import com.ctre.phoenix.motorcontrol.can.WPI_VictorSPX;
 
@@ -78,7 +75,7 @@ public class Robot extends TimedRobot {
  
   @Override
   public void teleopPeriodic() {
-    m_myRobot.MecanumDrive_Cartesian(controller.getX(), controller.getY(), controller.getZ());
+    m_myRobot.driveCartesian(controller.getX(), controller.getY(), controller.getZ());
     if(controller.getRawButton(1)){
       sol1.set(true);
       }
