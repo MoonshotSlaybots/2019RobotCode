@@ -13,7 +13,6 @@ import edu.wpi.first.wpilibj.drive.MecanumDrive;
 import edu.wpi.first.wpilibj.AnalogGyro;
 import edu.wpi.first.wpilibj.Compressor;
 import edu.wpi.first.wpilibj.Joystick;
-import edu.wpi.first.wpilibj.Solenoid;
 import edu.wpi.first.wpilibj.PowerDistributionPanel;
 
 import com.ctre.phoenix.motorcontrol.can.WPI_VictorSPX;
@@ -26,8 +25,8 @@ public class Robot extends TimedRobot {
   SpeedController FL;
   MecanumDrive drive; 
   Joystick controller;
-  Solenoid sol1;
-  Solenoid sol2;
+  Piston piston1;
+  Piston piston2;
   AnalogGyro gyro;
   Compressor comp;
  PowerDistributionPanel pdp;
@@ -42,8 +41,8 @@ public class Robot extends TimedRobot {
    drive = new MecanumDrive(FR, BL, FR, BR); // stating the drive type for the bot
    drive.setSafetyEnabled(false);
    controller = new Joystick(0);           // creating the controller
-   sol1 = new Solenoid(0);                 // Creating both ends of the Solenoid base
-   sol2 = new Solenoid(1);
+   piston1 = new Piston(0, 1);              //creating the piston object with solenoids in port 0 and 1
+   piston2 = new Piston(2,3);
    gyro = new AnalogGyro(0);               // creating Gyro
    comp = new Compressor(0);              // creating Compressor
   pdp = new PowerDistributionPanel();     // creating Power Distributor Panel
@@ -74,14 +73,17 @@ public class Robot extends TimedRobot {
   @Override
   public void teleopPeriodic() {
     System.out.println("Battery voltage is at" + pdp.getVoltage());
+    System.out.println(gyro.getRate());
+
     drive.driveCartesian(controller.getX(), controller.getY(), controller.getZ());
+
     if(controller.getRawButton(1)){
-      sol1.set(true);
+      piston1.extend();
       }
     else{
-      sol1.set(false);
+      piston1.retract();
       }
-  System.out.println(gyro.getRate());
+
     if(controller.getRawButton(3)){
       comp.start();
     }
