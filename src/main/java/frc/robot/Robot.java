@@ -17,6 +17,8 @@ import edu.wpi.first.wpilibj.CameraServer;
 import edu.wpi.first.wpilibj.Compressor;
 import edu.wpi.first.wpilibj.Joystick;
 import edu.wpi.first.wpilibj.Solenoid;
+import edu.wpi.first.wpilibj.RobotDrive;
+import edu.wpi.first.wpilibj.smartdashboard.*;
 
 
 
@@ -34,7 +36,8 @@ public class Robot extends TimedRobot {
   Solenoid sol2;
   AnalogGyro gyro;
   Compressor comp;
-  
+ MecanumDrive m_myRobot;
+
   @Override
   public void robotInit() {
    BL = new WPI_VictorSPX(1);
@@ -49,9 +52,7 @@ public class Robot extends TimedRobot {
    sol2 = new Solenoid(1);
    gyro = new AnalogGyro(0);
    comp = new Compressor(0);
-
-   
-
+  m_myRobot = new MecanumDrive(FL, BL, FR, BR);
 
 
   }
@@ -77,18 +78,19 @@ public class Robot extends TimedRobot {
  
   @Override
   public void teleopPeriodic() {
+    m_myRobot.MecanumDrive_Cartesian(controller.getX(), controller.getY(), controller.getZ());
     if(controller.getRawButton(1)){
       sol1.set(true);
       }
     else{
       sol1.set(false);
       }
-  System.out.println(gyro.getRate();
+  System.out.println(gyro.getRate());
     if(controller.getRawButton(3)){
-      comp.set(true);
+      comp.start();
     }
     else{
-      comp.set(false);
+      comp.stop();
     }
   }
 
