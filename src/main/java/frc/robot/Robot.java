@@ -10,14 +10,10 @@ package frc.robot;
 import edu.wpi.first.wpilibj.SpeedController;
 import edu.wpi.first.wpilibj.TimedRobot;
 import edu.wpi.first.wpilibj.drive.MecanumDrive;
-import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
-import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj.AnalogGyro;
-import edu.wpi.first.wpilibj.CameraServer;
 import edu.wpi.first.wpilibj.Compressor;
 import edu.wpi.first.wpilibj.Joystick;
 import edu.wpi.first.wpilibj.Solenoid;
-import edu.wpi.first.wpilibj.RobotDrive;
 
 import com.ctre.phoenix.motorcontrol.can.WPI_VictorSPX;
 
@@ -42,7 +38,6 @@ public class Robot extends TimedRobot {
    FR = new WPI_VictorSPX(3);
    FL = new WPI_VictorSPX(4);
    drive = new MecanumDrive(FR, BL, FR, BR);
-   CameraServer.getInstance().startAutomaticCapture("cam0",0);
    drive.setSafetyEnabled(false);
    controller = new Joystick(0);
    sol1 = new Solenoid(0);
