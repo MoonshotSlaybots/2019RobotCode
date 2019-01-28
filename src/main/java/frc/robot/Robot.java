@@ -10,7 +10,7 @@ package frc.robot;
 import edu.wpi.first.wpilibj.SpeedController;
 import edu.wpi.first.wpilibj.TimedRobot;
 import edu.wpi.first.wpilibj.drive.MecanumDrive;
-import edu.wpi.first.wpilibj.AnalogGyro;
+import edu.wpi.first.wpilibj.ADXRS450_Gyro;
 import edu.wpi.first.wpilibj.Compressor;
 import edu.wpi.first.wpilibj.Joystick;
 import edu.wpi.first.wpilibj.PowerDistributionPanel;
@@ -27,7 +27,7 @@ public class Robot extends TimedRobot {
   Joystick controller;
   Piston piston1;
   Piston piston2;
-  AnalogGyro gyro;
+  ADXRS450_Gyro gyro;
   Compressor comp;
  PowerDistributionPanel pdp;
  
@@ -43,9 +43,9 @@ public class Robot extends TimedRobot {
    controller = new Joystick(0);           // creating the controller
    piston1 = new Piston(0, 1);              //creating the piston object with solenoids in port 0 and 1
    piston2 = new Piston(2,3);
-   gyro = new AnalogGyro(0);               // creating Gyro
+   gyro = new ADXRS450_Gyro();               // creating Gyro
    comp = new Compressor(0);              // creating Compressor
-  pdp = new PowerDistributionPanel();     // creating Power Distributor Panel
+   pdp = new PowerDistributionPanel();     // creating Power Distributor Panel
   
   
 
@@ -73,9 +73,11 @@ public class Robot extends TimedRobot {
   @Override
   public void teleopPeriodic() {
     System.out.println("Battery voltage is at" + pdp.getVoltage());
-    System.out.println(gyro.getRate());
+    System.out.println("Gyro angle: " + gyro.getAngle());
 
     drive.driveCartesian(controller.getX(), controller.getY(), controller.getZ());
+    //possible field oriented drive mode 
+    //drive.driveCartesian(controller.getX(), controller.getY(), controller.getZ(), gyro.getAngle());
 
     if(controller.getRawButton(1)){
       piston1.extend();
