@@ -11,6 +11,8 @@ import java.util.HashMap;
 
 
 import edu.wpi.first.vision.*;
+import edu.wpi.cscore.CvSink;
+import edu.wpi.first.cameraserver.CameraServer;
 
 import org.opencv.core.*;
 import org.opencv.imgproc.*;
@@ -20,15 +22,19 @@ import org.opencv.imgcodecs.Imgcodecs;
 import org.opencv.objdetect.*;
 
 public class Vision implements Runnable{
-    private Mat hsvThresholdOutput = new Mat();
+
+    private Mat hsvThresholdOutput = new Mat();         //object vairables        
     private Thread t;
+    private CameraServer camServ;
 
-    @Override
-    public void run() {             //the begining of the new thread
-        //TODO: write code to get camera image and led control
-        process(new Mat());
+    private Mat imageA;
+    private Mat imageB;
+
+
+    public Vision(CameraServer camServ){            //constructor for a Vision object
+        this.camServ = camServ;                     //sets the objects camera server, comes from the camServ passed in when creating Vision object
+
     }
-
     public void start(){                            //starts the thread and calls the run method
         System.out.println("Starting thread");
         if(t==null){
@@ -38,6 +44,18 @@ public class Vision implements Runnable{
 
     }
 
+    @Override
+    public void run() {             //the begining of the new thread
+        //TODO: write code to get camera image and led control
+
+        CvSink camSink = camServ.getVideo("cam 0");
+        imageA = new Mat();
+        camSink.grabFrame(imageA);
+        
+        process(imageA);
+    }
+
+   
     public void process(Mat source0){               //processes the image and finds contours 
         Mat hsvThresholdinput = source0;
         double[] h = {12.9,44.006};

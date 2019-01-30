@@ -10,6 +10,9 @@ package frc.robot;
 import edu.wpi.first.wpilibj.SpeedController;
 import edu.wpi.first.wpilibj.TimedRobot;
 import edu.wpi.first.wpilibj.drive.MecanumDrive;
+import edu.wpi.cscore.UsbCamera;
+import edu.wpi.first.cameraserver.CameraServer;
+import edu.wpi.cscore.CvSink;
 import edu.wpi.first.wpilibj.ADXRS450_Gyro;
 import edu.wpi.first.wpilibj.Compressor;
 import edu.wpi.first.wpilibj.Joystick;
@@ -30,7 +33,8 @@ public class Robot extends TimedRobot {
   ADXRS450_Gyro gyro;
   Compressor comp;
  PowerDistributionPanel pdp;
- 
+ CameraServer camServ = CameraServer.getInstance();
+
 
   @Override
   public void robotInit() {
@@ -46,9 +50,14 @@ public class Robot extends TimedRobot {
    gyro = new ADXRS450_Gyro();               // creating Gyro
    comp = new Compressor(0);              // creating Compressor
    pdp = new PowerDistributionPanel();     // creating Power Distributor Panel
-  
-  
 
+
+   UsbCamera camera = CameraServer.getInstance().startAutomaticCapture("cam 0",0);          //set camera settings
+   
+   camera.setResolution(320, 240);
+   camera.setExposureManual(10);
+   camera.setFPS(20);
+   camera.setBrightness(20);
   }
 
   
@@ -95,10 +104,10 @@ public class Robot extends TimedRobot {
 
 
     //vision code
-    //if(controller.getRawButton(5)){
-    //  Vision visProc = new Vision();
+    // if(controller.getRawButton(5)){
+    //  Vision visProc = new Vision(camServ);
     //  visProc.start();
-    //}
+    // }
   }
 
 
