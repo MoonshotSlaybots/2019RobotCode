@@ -92,6 +92,13 @@ public class Robot extends TimedRobot {
     else{
       comp.stop();
     }
+
+
+    //vision code
+    //if(controller.getRawButton(5)){
+    //  Vision visProc = new Vision();
+    //  visProc.start();
+    //}
   }
 
 
