@@ -31,7 +31,6 @@ public class Robot extends TimedRobot {
   Piston piston1;
   Piston piston2;
   ADXRS450_Gyro gyro;
-  Compressor comp;
  PowerDistributionPanel pdp;
  CameraServer camServ = CameraServer.getInstance();
 
@@ -48,7 +47,6 @@ public class Robot extends TimedRobot {
    piston1 = new Piston(0, 1);              //creating the piston object with solenoids in port 0 and 1
    piston2 = new Piston(2,3);
    gyro = new ADXRS450_Gyro();               // creating Gyro
-   comp = new Compressor(0);              // creating Compressor
    pdp = new PowerDistributionPanel();     // creating Power Distributor Panel
 
 
@@ -95,12 +93,6 @@ public class Robot extends TimedRobot {
       piston1.retract();
       }
 
-    if(controller.getRawButton(3)){
-      comp.start();
-    }
-    else{
-      comp.stop();
-    }
 
 
     //vision code
