@@ -14,6 +14,9 @@ import edu.wpi.cscore.UsbCamera;
 import edu.wpi.first.cameraserver.CameraServer;
 import edu.wpi.cscore.CvSink;
 import edu.wpi.first.wpilibj.ADXRS450_Gyro;
+import edu.wpi.first.wpilibj.AnalogGyro;
+import edu.wpi.first.wpilibj.SPI;
+import edu.wpi.first.wpilibj.AnalogInput;
 import edu.wpi.first.wpilibj.Compressor;
 import edu.wpi.first.wpilibj.Joystick;
 import edu.wpi.first.wpilibj.PowerDistributionPanel;
@@ -26,11 +29,10 @@ public class Robot extends TimedRobot {
   SpeedController BR;
   SpeedController FR;
   SpeedController FL;
-  MecanumDrive drive; 
+  MecanumDrive drive;
+  AnalogInput lineSensor;
   Joystick controller;
-  Piston piston1;
-  Piston piston2;
-  ADXRS450_Gyro gyro;
+  AnalogGyro gyro;
  PowerDistributionPanel pdp;
  CameraServer camServ = CameraServer.getInstance();
 
@@ -44,10 +46,16 @@ public class Robot extends TimedRobot {
    drive = new MecanumDrive(FR, BL, FR, BR); // stating the drive type for the bot
    drive.setSafetyEnabled(false);
    controller = new Joystick(0);           // creating the controller
-   piston1 = new Piston(0, 1);              //creating the piston object with solenoids in port 0 and 1
-   piston2 = new Piston(2,3);
-   gyro = new ADXRS450_Gyro();               // creating Gyro
+
+   SPI.Port gyroPort = SPI.Port.kOnboardCS0;
+   gyro = new AnalogGyro(0);               // creating Gyro
+
+   gyro.initGyro();
+   gyro.calibrate();
+
    pdp = new PowerDistributionPanel();     // creating Power Distributor Panel
+
+   //lineSensor = new AnalogInput(0);
 
 
    UsbCamera camera = CameraServer.getInstance().startAutomaticCapture("cam 0",0);          //set camera settings
@@ -74,12 +82,16 @@ public class Robot extends TimedRobot {
   public void autonomousPeriodic() {
     
     }
-  
+  @Override
+  public void teleopInit() {
+    gyro.calibrate();             //calibrate the gyro, the current bot angle is now 0 degrees
+  }
 
  
   @Override
   public void teleopPeriodic() {
-    System.out.println("Battery voltage is at" + pdp.getVoltage());
+    //System.out.println("lineSensor voltage: " + lineSensor.getVoltage());
+    //System.out.println("Battery voltage is: " + pdp.getVoltage());
     System.out.println("Gyro angle: " + gyro.getAngle());
 
     drive.driveCartesian(controller.getX(), controller.getY(), controller.getZ());
@@ -87,10 +99,8 @@ public class Robot extends TimedRobot {
     //drive.driveCartesian(controller.getX(), controller.getY(), controller.getZ(), gyro.getAngle());
 
     if(controller.getRawButton(1)){
-      piston1.extend();
       }
     else{
-      piston1.retract();
       }
 
 
