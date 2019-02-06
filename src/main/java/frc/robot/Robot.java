@@ -12,16 +12,13 @@ import edu.wpi.first.wpilibj.TimedRobot;
 import edu.wpi.first.wpilibj.drive.MecanumDrive;
 import edu.wpi.cscore.UsbCamera;
 import edu.wpi.first.cameraserver.CameraServer;
-import edu.wpi.cscore.CvSink;
 import edu.wpi.first.wpilibj.ADXRS450_Gyro;
-import edu.wpi.first.wpilibj.AnalogGyro;
-import edu.wpi.first.wpilibj.SPI;
 import edu.wpi.first.wpilibj.AnalogInput;
-import edu.wpi.first.wpilibj.Compressor;
 import edu.wpi.first.wpilibj.Joystick;
 import edu.wpi.first.wpilibj.PowerDistributionPanel;
 
 import com.ctre.phoenix.motorcontrol.can.WPI_VictorSPX;
+import com.ctre.phoenix.motorcontrol.can.WPI_TalonSRX;
 
 
 public class Robot extends TimedRobot {
@@ -32,30 +29,38 @@ public class Robot extends TimedRobot {
   MecanumDrive drive;
   AnalogInput lineSensor;
   Joystick controller;
-  AnalogGyro gyro;
- PowerDistributionPanel pdp;
- CameraServer camServ = CameraServer.getInstance();
+  ADIS16448_IMU gyro;
+  PowerDistributionPanel pdp;
+  CameraServer camServ = CameraServer.getInstance();
 
+
+ //tweaking variables
+ double rotationTolerance = 10;       //for auto rotation, stops plus or minus this angle, 
+                                      //prevents rocking back and forth
 
   @Override
   public void robotInit() {
-   BL = new WPI_VictorSPX(1);         // Motors and where they are plugged into the bot
-   BR = new WPI_VictorSPX(2);
-   FR = new WPI_VictorSPX(3);
-   FL = new WPI_VictorSPX(4);
-   drive = new MecanumDrive(FR, BL, FR, BR); // stating the drive type for the bot
+  // BL = new WPI_VictorSPX(1);         // Motors and where they are plugged into the bot
+  // BR = new WPI_VictorSPX(2);
+  // FR = new WPI_VictorSPX(3);
+  // FL = new WPI_VictorSPX(4);
+
+        //practice robot speed contollers
+   BL= new WPI_TalonSRX(1);
+   BR= new WPI_TalonSRX(2);
+   FR= new WPI_TalonSRX(3);
+   FL= new WPI_TalonSRX(4);
+
+   drive = new MecanumDrive(FL, BL, FR, BR); // stating the drive type for the bot
    drive.setSafetyEnabled(false);
-   controller = new Joystick(0);           // creating the controller
+   controller = new Joystick(0);            // creating the controller
 
-   SPI.Port gyroPort = SPI.Port.kOnboardCS0;
-   gyro = new AnalogGyro(0);               // creating Gyro
+   gyro = new ADIS16448_IMU();              // creating Gyro
+   gyro.calibrate();                        //calibrate the gyro
 
-   gyro.initGyro();
-   gyro.calibrate();
+   pdp = new PowerDistributionPanel();      // creating Power Distributor Panel
 
-   pdp = new PowerDistributionPanel();     // creating Power Distributor Panel
-
-   //lineSensor = new AnalogInput(0);
+   lineSensor = new AnalogInput(0);         //create the line sensor on analog port 0
 
 
    UsbCamera camera = CameraServer.getInstance().startAutomaticCapture("cam 0",0);          //set camera settings
@@ -92,15 +97,14 @@ public class Robot extends TimedRobot {
   public void teleopPeriodic() {
     //System.out.println("lineSensor voltage: " + lineSensor.getVoltage());
     //System.out.println("Battery voltage is: " + pdp.getVoltage());
+    
     System.out.println("Gyro angle: " + gyro.getAngle());
-
-    drive.driveCartesian(controller.getX(), controller.getY(), controller.getZ());
+    drive.driveCartesian(controller.getX()*-1, controller.getY(), controller.getRawAxis(4));
     //possible field oriented drive mode 
     //drive.driveCartesian(controller.getX(), controller.getY(), controller.getZ(), gyro.getAngle());
 
-    if(controller.getRawButton(1)){
-      }
-    else{
+    if(controller.getRawButton(3)){         //red button on controller
+        rotateBot(-180);                    
       }
 
 
@@ -116,4 +120,38 @@ public class Robot extends TimedRobot {
   @Override
   public void testPeriodic() {
   }
+
+
+  public double calcRotSpeed(double x){           //calculates the rotation speed based on how far until robot reaches end angle
+    double y=(x*0.001)+0.2;                       //a linear function
+    return y;
+  }
+
+
+  public void rotateBot(double angle){                        //rotate the robot a certain angle 
+    double startAngle = gyro.getAngle();                      //get the absolute starting angle of the robor
+    double endAngle = startAngle + angle;                     //calculate the absolute end angle 
+
+    double currentAngle = gyro.getAngle();                    //the current angle of the robot, this will be updated constantly
+
+    while(true){                                              //loop this until the return keyword is hit
+      currentAngle = gyro.getAngle();                         //update the robots current angle
+      double rotDist = Math.abs(currentAngle-endAngle);       //find the distance yet to rotate
+      double rotSpeed = calcRotSpeed(rotDist);                //calculate the rotation speed
+
+      System.out.println("rotation speed= "+rotSpeed);        
+      if(currentAngle<endAngle+rotationTolerance){            //if robot angle is less than end angle(to the left)   
+        drive.driveCartesian(0, 0, rotSpeed);                 //rotate clockwise (positive speed)
+      }
+      else if(currentAngle>endAngle+rotationTolerance){       //if robot angle is greater than end angle (to the right)
+        drive.driveCartesian(0, 0, -rotSpeed);                //rotate counter-clockwise (negative rotation)
+      }
+      else{
+        drive.driveCartesian(0, 0, 0);                        //stop the robot once robot is lined up
+        return;                                               //exit the loop
+      }
+    }
+  }
+
+
 }
