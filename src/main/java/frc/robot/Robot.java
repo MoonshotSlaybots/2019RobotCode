@@ -19,6 +19,7 @@ import edu.wpi.first.wpilibj.PowerDistributionPanel;
 
 import com.ctre.phoenix.motorcontrol.can.WPI_VictorSPX;
 import com.ctre.phoenix.motorcontrol.can.WPI_TalonSRX;
+import com.analog.adis16448.frc.ADIS16448_IMU;
 
 
 public class Robot extends TimedRobot {
@@ -29,6 +30,7 @@ public class Robot extends TimedRobot {
   MecanumDrive drive;
   AnalogInput lineSensor;
   Joystick controller;
+  Joystick launchpad;
   ADIS16448_IMU gyro;
   PowerDistributionPanel pdp;
   CameraServer camServ = CameraServer.getInstance();
@@ -53,7 +55,9 @@ public class Robot extends TimedRobot {
 
    drive = new MecanumDrive(FL, BL, FR, BR); // stating the drive type for the bot
    drive.setSafetyEnabled(false);
-   controller = new Joystick(0);            // creating the controller
+   controller = new Joystick(1);            // creating the controller
+
+   launchpad = new Joystick(0);
 
    gyro = new ADIS16448_IMU();              // creating Gyro
    gyro.calibrate();                        //calibrate the gyro
@@ -98,7 +102,11 @@ public class Robot extends TimedRobot {
     //System.out.println("lineSensor voltage: " + lineSensor.getVoltage());
     //System.out.println("Battery voltage is: " + pdp.getVoltage());
     
-    System.out.println("Gyro angle: " + gyro.getAngle());
+    System.out.println(
+      "Gyro angle x: " + gyro.getAngleX()+
+      "Gyro angle y: " + gyro.getAngleY()+
+      "Gyro angle z: " + gyro.getAngleZ());
+    
     drive.driveCartesian(controller.getX()*-1, controller.getY(), controller.getRawAxis(4));
     //possible field oriented drive mode 
     //drive.driveCartesian(controller.getX(), controller.getY(), controller.getZ(), gyro.getAngle());
@@ -119,7 +127,15 @@ public class Robot extends TimedRobot {
 
   @Override
   public void testPeriodic() {
-  }
+    if(launchpad.getRawButton(1)){
+      launchpad.setOutput(1, true);       //output 1 is the onboard led
+      launchpad.setOutput(6, true);       //6 is pin p8.2 (refer to the pinout diagram for option 2)
+    }else{
+      launchpad.setOutput(1,false);
+      launchpad.setOutput(6,false);
+    }
+
+   }
 
 
   public double calcRotSpeed(double x){           //calculates the rotation speed based on how far until robot reaches end angle
