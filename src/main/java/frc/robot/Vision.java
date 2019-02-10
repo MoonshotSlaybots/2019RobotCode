@@ -26,8 +26,9 @@ public class Vision implements Runnable{
     //proccessing outputs
     private Mat hsvThresholdOutput = new Mat();   
     private ArrayList<MatOfPoint> findContoursOutput = new ArrayList<MatOfPoint>();
-    private ArrayList<MatOfPoint> filterContoursOutput = new ArrayList<MatOfPoint>();
-        
+    private ArrayList<MatOfPoint> tapeList = new ArrayList<MatOfPoint>();
+    private ArrayList<MatOfPoint> targetList = new ArrayList<MatOfPoint>();
+
     //object vairables        
     private Thread t;
     private CameraServer camServ;
@@ -37,6 +38,7 @@ public class Vision implements Runnable{
     private Mat imageA;
     private Mat imageB;
 
+    boolean contourFound=false;
     boolean targetFound=false;
 
 
@@ -63,15 +65,16 @@ public class Vision implements Runnable{
         
         process(imageA);
 
-
-        if(targetFound){                                 //change driver station LEDs
-            launchpad.setLED("green");
-        }else{
+        if (tapeList.size()>0){
+            contourFound = true;
+        }else{                                 //if countourFound = false, change driver station LEDs
             launchpad.setLED("red");
             launchpad.blinkLED(50, 10);
-            launchpad.setLED("green");
+            launchpad.setLED("teamColor");
             return;
         }
+
+
     }
 
    
@@ -103,7 +106,16 @@ public class Vision implements Runnable{
         filterContours(filterContoursContours, filterContoursMinArea, filterContoursMinPerimeter, 
         filterContoursMinWidth, filterContoursMaxWidth, filterContoursMinHeight, filterContoursMaxHeight, 
         filterContoursSolidity, filterContoursMaxVertices, filterContoursMinVertices, filterContoursMinRatio, 
-        filterContoursMaxRatio, filterContoursOutput);
+        filterContoursMaxRatio, tapeList);
+    }
+
+    public void findTargets(){
+        for(int i=0; i<tapeList.size(); i++ ){              //iterate through the contours in the tapelist
+            MatOfPoint tape = tapeList.get(i);
+            Imgproc proc = new Imgproc();
+
+        }
+
     }
 
    

@@ -125,7 +125,7 @@ public class Robot extends TimedRobot {
   public void testPeriodic() {
     if (launchpad.launchpad.getRawButton(1)){
       launchpad.setLED("magenta");
-      launchpad.blinkLED();
+      launchpad.blinkLED(50,100);
     }
       
 

@@ -18,9 +18,25 @@ public class LaunchpadWrapper {
     boolean blueState=false;
     boolean whiteState=false;
 
+    String teamColor=null;
+
 
     public LaunchpadWrapper(final int port){           //constructor for the launchpad, creates a joystick on USB port provided 
         launchpad = new Joystick(port);
+        setTeamColor();
+    }
+
+    public void setTeamColor(){
+       DriverStation.Alliance color = DriverStation.getInstance().getAlliance();
+       if(color==DriverStation.Alliance.Blue){
+           teamColor="blue";
+       }else{
+           teamColor="red";
+       }
+    }
+
+    public String getTeamColor(){
+        return teamColor;
     }
 
     public void setLEDPins(int red, int green, int blue, int white){            //set the pins that the LEDs are connected to on the launchpad
@@ -78,6 +94,9 @@ public class LaunchpadWrapper {
             case "white":
                 launchpad.setOutput(whitePin, true);
                 whiteState=true;
+                break;
+            case "teamColor":
+                this.setLED(teamColor);
                 break;
             case "off":
                 //colors already cleared at beginning
