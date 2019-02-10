@@ -163,5 +163,13 @@ public class Robot extends TimedRobot {
     }
   }
 
+  public LaunchpadWrapper getLaunchpad (){
+    return launchpad;
+  }
+
+  public CameraServer getCamServer(){
+    return camServ;
+  }
+
 
 }

@@ -23,17 +23,27 @@ import org.opencv.objdetect.*;
 
 public class Vision implements Runnable{
 
-    private Mat hsvThresholdOutput = new Mat();         //object vairables        
+    //proccessing outputs
+    private Mat hsvThresholdOutput = new Mat();   
+    private ArrayList<MatOfPoint> findContoursOutput = new ArrayList<MatOfPoint>();
+    private ArrayList<MatOfPoint> filterContoursOutput = new ArrayList<MatOfPoint>();
+        
+    //object vairables        
     private Thread t;
     private CameraServer camServ;
+    private Robot robot;
+    private LaunchpadWrapper launchpad;
 
     private Mat imageA;
     private Mat imageB;
 
+    boolean targetFound=false;
 
-    public Vision(CameraServer camServ){            //constructor for a Vision object
-        this.camServ = camServ;                     //sets the objects camera server, comes from the camServ passed in when creating Vision object
 
+    public Vision(Robot robot){                                  //constructor for a Vision object
+        this.robot = robot;                                      //sets the robot variable in the vision object to the robot passed in 
+        camServ = this.robot.getCamServer();                     //sets the objects camera server, comes from the getCamServ method in the robot object
+        launchpad = this.robot.getLaunchpad();                                      
     }
     public void start(){                            //starts the thread and calls the run method
         System.out.println("Starting thread");
@@ -45,23 +55,55 @@ public class Vision implements Runnable{
     }
 
     @Override
-    public void run() {             //the begining of the new thread
-        //TODO: write code to get camera image and led control
-
-        CvSink camSink = camServ.getVideo("cam 0");
-        imageA = new Mat();
-        camSink.grabFrame(imageA);
+    public void run() {                                  //the begining of the new thread
+        launchpad.setLED("yellow");                      //set the color of the driver station led strip
+        CvSink camSink = camServ.getVideo("cam 0");      //creates an object to capture images from cam
+        imageA = new Mat();                              //create a new matrix that will hold an image
+        camSink.grabFrame(imageA);                       //get the next frame from the camera and store it in imageA
         
         process(imageA);
+
+
+        if(targetFound){                                 //change driver station LEDs
+            launchpad.setLED("green");
+        }else{
+            launchpad.setLED("red");
+            launchpad.blinkLED(50, 10);
+            launchpad.setLED("green");
+            return;
+        }
     }
 
    
     public void process(Mat source0){               //processes the image and finds contours 
+        //step 1: HSV threshold
         Mat hsvThresholdinput = source0;
         double[] h = {12.9,44.006};
         double[] s = {91.46,255.0};
         double[] v = {133.381,255.0};
-        hsvThreshold(hsvThresholdinput, h, s, v,hsvThresholdOutput);        
+        hsvThreshold(hsvThresholdinput, h, s, v,hsvThresholdOutput);   
+        
+        //step 2: Find countours 
+        Mat findContoursInput = hsvThresholdOutput;
+        findContours(findContoursInput, false, findContoursOutput); 
+
+        //step 3: Filter countours
+        ArrayList<MatOfPoint> filterContoursContours = findContoursOutput;
+		double filterContoursMinArea = 400.0;
+		double filterContoursMinPerimeter = 0;
+		double filterContoursMinWidth = 0.0;
+		double filterContoursMaxWidth = 1000.0;
+		double filterContoursMinHeight = 0;
+		double filterContoursMaxHeight = 1000.0;
+		double[] filterContoursSolidity = {0, 100};
+		double filterContoursMaxVertices = 1000000.0;
+		double filterContoursMinVertices = 0;
+		double filterContoursMinRatio = 0.51;
+		double filterContoursMaxRatio = 1.0;
+        filterContours(filterContoursContours, filterContoursMinArea, filterContoursMinPerimeter, 
+        filterContoursMinWidth, filterContoursMaxWidth, filterContoursMinHeight, filterContoursMaxHeight, 
+        filterContoursSolidity, filterContoursMaxVertices, filterContoursMinVertices, filterContoursMinRatio, 
+        filterContoursMaxRatio, filterContoursOutput);
     }
 
    
