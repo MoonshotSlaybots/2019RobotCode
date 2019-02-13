@@ -18,9 +18,25 @@ public class LaunchpadWrapper {
     boolean blueState=false;
     boolean whiteState=false;
 
+    String teamColor=null;
+
 
     public LaunchpadWrapper(final int port){           //constructor for the launchpad, creates a joystick on USB port provided 
         launchpad = new Joystick(port);
+        setTeamColor();
+    }
+
+    public void setTeamColor(){
+       DriverStation.Alliance color = DriverStation.getInstance().getAlliance();
+       if(color==DriverStation.Alliance.Blue){
+           teamColor="blue";
+       }else{
+           teamColor="red";
+       }
+    }
+
+    public String getTeamColor(){
+        return teamColor;
     }
 
     public void setLEDPins(int red, int green, int blue, int white){            //set the pins that the LEDs are connected to on the launchpad
@@ -79,6 +95,9 @@ public class LaunchpadWrapper {
                 launchpad.setOutput(whitePin, true);
                 whiteState=true;
                 break;
+            case "teamColor":
+                this.setLED(teamColor);
+                break;
             case "off":
                 //colors already cleared at beginning
                 break;
@@ -102,10 +121,10 @@ public class LaunchpadWrapper {
                                                                     //WARNING: Do not call this method in quick succession,
                                                                     //multiple threads will be made, causing the robot to CRASH
                                                                     
-    public void blinkLED(){                                         //blink the current color
-        BlinkLED blinkLED = new BlinkLED(this, 100, 50);            //create a new object to run this on a different thread
-        Thread thread = new Thread(blinkLED);                       //create the new thread
-        thread.start();                                             //start the thread (will call the run() method)
+    public void blinkLED(int delay, int cycles){                            //blink the current color
+        BlinkLED blinkLED = new BlinkLED(this, delay, cycles);              //create a new object to run this on a different thread
+        Thread thread = new Thread(blinkLED);                               //create the new thread
+        thread.start();                                                     //start the thread (will call the run() method)
     }
                                                                     //this is in a new thread so it does not tie down the system
                                                                     //by using the thread.sleep() method which stops the code for a certain time

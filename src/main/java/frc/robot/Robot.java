@@ -133,7 +133,7 @@ public class Robot extends TimedRobot {
   public void testPeriodic() {
     if (launchpad.launchpad.getRawButton(1)){
       launchpad.setLED("magenta");
-      launchpad.blinkLED();
+      launchpad.blinkLED(50,100);
     }
       
 
@@ -169,6 +169,14 @@ public class Robot extends TimedRobot {
         return;                                               //exit the loop
       }
     }
+  }
+
+  public LaunchpadWrapper getLaunchpad (){
+    return launchpad;
+  }
+
+  public CameraServer getCamServer(){
+    return camServ;
   }
 
 
