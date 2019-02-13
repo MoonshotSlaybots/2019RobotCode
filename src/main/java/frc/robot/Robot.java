@@ -12,11 +12,11 @@ import edu.wpi.first.wpilibj.TimedRobot;
 import edu.wpi.first.wpilibj.drive.MecanumDrive;
 import edu.wpi.cscore.UsbCamera;
 import edu.wpi.first.cameraserver.CameraServer;
-import edu.wpi.first.wpilibj.ADXRS450_Gyro;
 import edu.wpi.first.wpilibj.AnalogInput;
 import edu.wpi.first.wpilibj.Encoder;
 import edu.wpi.first.wpilibj.Joystick;
 import edu.wpi.first.wpilibj.PowerDistributionPanel;
+import edu.wpi.first.wpilibj.SPI;
 
 import com.ctre.phoenix.motorcontrol.can.WPI_VictorSPX;
 import com.ctre.phoenix.motorcontrol.can.WPI_TalonSRX;
@@ -34,13 +34,13 @@ public class Robot extends TimedRobot {
   AnalogInput lineSensor;
   Joystick controller;
   LaunchpadWrapper launchpad;
-  NavXMXP_Gyro gyro;
+  AHRS gyro;
   PowerDistributionPanel pdp;
   CameraServer camServ = CameraServer.getInstance();
 
 
  //tweaking variables
- double rotationTolerance = 10;       //for auto rotation, stops plus or minus this angle, 
+ double rotationTolerance = 1;       //for auto rotation, stops plus or minus this angle, 
                                       //prevents rocking back and forth
 
   @Override
@@ -48,13 +48,13 @@ public class Robot extends TimedRobot {
   // BL = new WPI_VictorSPX(1);         // Motors and where they are plugged into the bot
   // BR = new WPI_VictorSPX(2);
   // FR = new WPI_VictorSPX(3);
-   FL = new WPI_VictorSPX(0);
+  //FL = new WPI_VictorSPX(0);
 
         //practice robot speed contollers
    BL= new WPI_TalonSRX(1);
    BR= new WPI_TalonSRX(2);
    FR= new WPI_TalonSRX(3);
-  // FL= new WPI_TalonSRX(4);
+   FL= new WPI_TalonSRX(4);
 
    encoderFL = new Encoder(0,1);                                  //create the encoder 
    encoderFL.setDistancePerPulse((double) 1/1024 * 18.72);        //set the distance per pulse of encoder, 1024 pulses per rotation of rod
@@ -66,8 +66,8 @@ public class Robot extends TimedRobot {
 
    launchpad = new LaunchpadWrapper(1);
 
-   gyro = new NavXMXP_Gyro();              // creating Gyro
-   gyro.calibrate();                        //calibrate the gyro
+   gyro = new AHRS(SPI.Port.kMXP);             // creating Gyro
+   gyro.reset();                               //sets the gyro to a heading of 0
 
    pdp = new PowerDistributionPanel();      // creating Power Distributor Panel
 
@@ -100,7 +100,7 @@ public class Robot extends TimedRobot {
     }
   @Override
   public void teleopInit() {
-    gyro.calibrate();             //calibrate the gyro, the current bot angle is now 0 degrees
+    gyro.reset();             //calibrate the gyro, the current bot angle is now 0 degrees
   }
 
  
@@ -116,7 +116,7 @@ public class Robot extends TimedRobot {
     System.out.println(gyro.getAngle());
 
     if(controller.getRawButton(3)){         //red button on controller
-        rotateBot(-180);                    
+        rotateBot(180);                    
       }
 
 
@@ -141,7 +141,12 @@ public class Robot extends TimedRobot {
 
 
   public double calcRotSpeed(double x){           //calculates the rotation speed based on how far until robot reaches end angle
-    double y=(x*0.001)+0.2;                       //a linear function
+    //double y=(x*0.001)+0.2;                       //a linear function
+    double a = (double) -18;
+    double b = (double) -202;
+    double c = (double) 0.15;
+
+    double y= (double) a/(x+b)+c;        //a rational function
     return y;
   }
 
@@ -157,8 +162,9 @@ public class Robot extends TimedRobot {
       double rotDist = Math.abs(currentAngle-endAngle);       //find the distance yet to rotate
       double rotSpeed = calcRotSpeed(rotDist);                //calculate the rotation speed
 
-      System.out.println("rotation speed= "+rotSpeed);        
-      if(currentAngle<endAngle+rotationTolerance){            //if robot angle is less than end angle(to the left)   
+     // System.out.println("rotation speed= "+rotSpeed);        
+     // System.out.println("angle= "+ currentAngle);
+      if(currentAngle<endAngle-rotationTolerance){            //if robot angle is less than end angle(to the left)   
         drive.driveCartesian(0, 0, rotSpeed);                 //rotate clockwise (positive speed)
       }
       else if(currentAngle>endAngle+rotationTolerance){       //if robot angle is greater than end angle (to the right)
