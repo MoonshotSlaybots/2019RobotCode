@@ -14,22 +14,27 @@ import edu.wpi.cscore.UsbCamera;
 import edu.wpi.first.cameraserver.CameraServer;
 import edu.wpi.first.wpilibj.ADXRS450_Gyro;
 import edu.wpi.first.wpilibj.AnalogInput;
+import edu.wpi.first.wpilibj.Encoder;
 import edu.wpi.first.wpilibj.Joystick;
 import edu.wpi.first.wpilibj.PowerDistributionPanel;
 
 import com.ctre.phoenix.motorcontrol.can.WPI_VictorSPX;
 import com.ctre.phoenix.motorcontrol.can.WPI_TalonSRX;
+import com.kauailabs.navx.frc.AHRS;
 
 public class Robot extends TimedRobot {
   SpeedController BL;
   SpeedController BR;
   SpeedController FR;
   SpeedController FL;
+
+  Encoder encoderFL;        //create the encoder for the front motor 
+
   MecanumDrive drive;
   AnalogInput lineSensor;
   Joystick controller;
   LaunchpadWrapper launchpad;
-  ADXRS450_Gyro gyro;
+  NavXMXP_Gyro gyro;
   PowerDistributionPanel pdp;
   CameraServer camServ = CameraServer.getInstance();
 
@@ -43,21 +48,25 @@ public class Robot extends TimedRobot {
   // BL = new WPI_VictorSPX(1);         // Motors and where they are plugged into the bot
   // BR = new WPI_VictorSPX(2);
   // FR = new WPI_VictorSPX(3);
-  // FL = new WPI_VictorSPX(4);
+   FL = new WPI_VictorSPX(0);
 
         //practice robot speed contollers
    BL= new WPI_TalonSRX(1);
    BR= new WPI_TalonSRX(2);
    FR= new WPI_TalonSRX(3);
-   FL= new WPI_TalonSRX(4);
+  // FL= new WPI_TalonSRX(4);
+
+   encoderFL = new Encoder(0,1);                                  //create the encoder 
+   encoderFL.setDistancePerPulse((double) 1/1024 * 18.72);        //set the distance per pulse of encoder, 1024 pulses per rotation of rod
+                                                                  //wheel circumfrence = 18.72 in
 
    drive = new MecanumDrive(FL, BL, FR, BR); // stating the drive type for the bot
    drive.setSafetyEnabled(false);
-   controller = new Joystick(1);            // creating the controller
+   controller = new Joystick(0);            // creating the controller
 
-   launchpad = new LaunchpadWrapper(0);
+   launchpad = new LaunchpadWrapper(1);
 
-   gyro = new ADXRS450_Gyro();              // creating Gyro
+   gyro = new NavXMXP_Gyro();              // creating Gyro
    gyro.calibrate();                        //calibrate the gyro
 
    pdp = new PowerDistributionPanel();      // creating Power Distributor Panel
@@ -100,12 +109,11 @@ public class Robot extends TimedRobot {
     //System.out.println("lineSensor voltage: " + lineSensor.getVoltage());
     //System.out.println("Battery voltage is: " + pdp.getVoltage());
     
-    System.out.println(
-      "Gyro angle: " + gyro.getAngle());
-    
     drive.driveCartesian(controller.getX()*-1, controller.getY(), controller.getRawAxis(4));
     //possible field oriented drive mode 
     //drive.driveCartesian(controller.getX(), controller.getY(), controller.getZ(), gyro.getAngle());
+
+    System.out.println(gyro.getAngle());
 
     if(controller.getRawButton(3)){         //red button on controller
         rotateBot(-180);                    
