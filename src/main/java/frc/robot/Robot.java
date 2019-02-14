@@ -31,7 +31,7 @@ public class Robot extends TimedRobot {
   Encoder encoderFL;        //create the encoder for the front motor 
 
   MecanumDrive drive;
-  AnalogInput lineSensor;
+  ArmEncoder rotEncoder;
   Joystick controller;
   LaunchpadWrapper launchpad;
   AHRS gyro;
@@ -71,8 +71,8 @@ public class Robot extends TimedRobot {
 
    pdp = new PowerDistributionPanel();      // creating Power Distributor Panel
 
-   lineSensor = new AnalogInput(0);         //create the line sensor on analog port 0
-
+   rotEncoder = new ArmEncoder(0);         //create the line sensor on analog port 0
+   rotEncoder.setStartAngle(30);
 
    UsbCamera camera = CameraServer.getInstance().startAutomaticCapture("cam 0",0);          //set camera settings
    
@@ -131,10 +131,8 @@ public class Robot extends TimedRobot {
 
   @Override
   public void testPeriodic() {
-    if (launchpad.launchpad.getRawButton(1)){
-      launchpad.setLED("magenta");
-      launchpad.blinkLED(50,100);
-    }
+    System.out.println("raw: " + rotEncoder.getRawAngle());
+    System.out.println("angle: "+rotEncoder.getAngle());
       
 
    }
