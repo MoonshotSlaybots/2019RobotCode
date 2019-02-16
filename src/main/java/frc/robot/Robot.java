@@ -37,12 +37,14 @@ public class Robot extends TimedRobot {
   
   MecanumDrive drive;
   ArmEncoder rotEncoder;
+  AnalogInput us;
+  AnalogInput us2;
   Joystick controller;
   LaunchpadWrapper launchpad;
   AHRS gyro;
   PowerDistributionPanel pdp;
   CameraServer camServ = CameraServer.getInstance();
-
+  
 
  //tweaking variables
  double rotationTolerance = 1;       //for auto rotation, stops plus or minus this angle, 
@@ -74,6 +76,9 @@ public class Robot extends TimedRobot {
 
   encoderBR = new Encoder(6,7);                                  //create the encoder 
   encoderBR.setDistancePerPulse((double) 1/1024 * 18.72);
+
+  us = new AnalogInput (3);
+  us2= new AnalogInput(2);
 
 
    drive = new MecanumDrive(FL, BL, FR, BR); // stating the drive type for the bot
@@ -151,7 +156,7 @@ public class Robot extends TimedRobot {
 
   @Override
   public void testPeriodic() {
-    System.out.println("angle: "+rotEncoder.getAngle());
+    System.out.println(us.getVoltage());
       
 
    }
