@@ -147,6 +147,7 @@ public class Robot extends TimedRobot {
   public void testInit() {
     rotEncoder.reset();
   }
+   
 
   @Override
   public void testPeriodic() {
