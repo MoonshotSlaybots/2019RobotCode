@@ -28,7 +28,7 @@ public class Vision implements Runnable{
     private Thread t;
     private CameraServer camServ;
     private Robot robot;
-    private LaunchpadWrapper launchpad;
+    //private LaunchpadWrapper launchpad;
 
     //proccessing outputs
     private Mat hsvThresholdOutput = new Mat();   
@@ -51,12 +51,12 @@ public class Vision implements Runnable{
     public Vision(Robot robot){                                  //constructor for a Vision object
         this.robot = robot;                                      //sets the robot variable in the vision object to the robot passed in 
         camServ = this.robot.getCamServer();                     //sets the objects camera server, comes from the getCamServ method in the robot object
-        launchpad = this.robot.getLaunchpad();                                      
+    //    launchpad = this.robot.getLaunchpad();                                      
     }
 
     public void start(){                            //starts the thread and calls the run method
-        System.out.println("Starting thread");
         if(t==null){
+            System.out.println("Starting thread");
             t=new Thread(this);
             t.start();
         }
@@ -64,7 +64,7 @@ public class Vision implements Runnable{
 
     @Override
     public void run() {                                  //the begining of the new thread
-        launchpad.setLED("yellow");                      //set the color of the driver station led strip
+        //launchpad.setLED("yellow");                      //set the color of the driver station led strip
         CvSink camSink = camServ.getVideo("cam 0");      //creates an object to capture images from cam
         imageA = new Mat();                              //create a new matrix that will hold an image
         camSink.grabFrame(imageA);                       //get the next frame from the camera and store it in imageA
@@ -74,6 +74,7 @@ public class Vision implements Runnable{
         if (filterContoursOutput.size()>0){         //if there are contours in the list set the vairable and continue
             contourFound = true;
         }else{                                      //if there are not contours, call the vision failed method and exit the run method
+            System.out.println("contour size is 0");
             visionFailed();
             return;
         }
@@ -83,6 +84,7 @@ public class Vision implements Runnable{
         if(tapeList.size()>0){
             tapeFound=true;
         }else{
+            System.out.println("tape size is 0");
             visionFailed();
             return;
         }
@@ -92,6 +94,7 @@ public class Vision implements Runnable{
         if(targetList.size()>0){                    
             targetFound=true;
         }else{
+            System.out.println("target size is 0");
             visionFailed();
             return;
         }
@@ -99,13 +102,17 @@ public class Vision implements Runnable{
 
     private void visionFailed(){                //called when vision proccessing failes, blinks the launchpad LEDs, a return in the run method
                                                 //should be called after this method to end the thread
-        launchpad.setLED("red");        
-        launchpad.blinkLED(50, 10);
-        launchpad.setLED("teamColor");
+        System.out.println("vision failed");
+        t=null;
+       // launchpad.setLED("red");        
+        //launchpad.blinkLED(50, 10);
+        //launchpad.setLED("teamColor");
     }
 
    
     private void process(Mat source0){               //processes the image and finds contours 
+        System.out.println("processing image");
+
         //step 1: HSV threshold
         Mat hsvThresholdinput = source0;
         double[] h = {12.9,44.006};
@@ -215,6 +222,8 @@ public class Vision implements Runnable{
 
 
     private void findTapes(){
+        System.out.println("finding tapes");
+
         MatOfPoint2f approxCurve = new MatOfPoint2f();
 
         for(int i=0; i<filterContoursOutput.size(); i++ ){              //iterate through the contours in the filter output
@@ -236,6 +245,8 @@ public class Vision implements Runnable{
     }
 
     private void findTargets(){                     //look through the tape list and find sets of tapes that make up a target
+        System.out.println("finding targets");
+        
         Tape leftTape=null;
         Tape rightTape=null;
 

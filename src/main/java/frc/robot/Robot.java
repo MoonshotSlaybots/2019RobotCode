@@ -42,6 +42,8 @@ public class Robot extends TimedRobot {
   AHRS gyro;
   PowerDistributionPanel pdp;
   CameraServer camServ = CameraServer.getInstance();
+  Vision vision;
+
 
 
  //tweaking variables
@@ -96,6 +98,7 @@ public class Robot extends TimedRobot {
    camera.setExposureManual(10);
    camera.setFPS(20);
    camera.setBrightness(20);
+   vision = new Vision(this);
   }
 
   
@@ -151,8 +154,9 @@ public class Robot extends TimedRobot {
 
   @Override
   public void testPeriodic() {
-    System.out.println("angle: "+rotEncoder.getAngle());
-      
+    if (controller.getRawButton(3)){
+      vision.start();
+    }      
 
    }
 
