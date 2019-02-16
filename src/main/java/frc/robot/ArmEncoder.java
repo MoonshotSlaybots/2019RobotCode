@@ -4,38 +4,48 @@ import edu.wpi.first.wpilibj.AnalogInput;
  
 public class ArmEncoder{
     AnalogInput encoder;
-    double angleDelta;
     double startAngle;
-
+    double offset;
     double angle;
+
     public ArmEncoder(int port){
         encoder = new AnalogInput(port);
-        angleDelta =0;
         startAngle=0;
+        calcOffset();
+    }
+
+    private void calcOffset(){
+        offset = startAngle-((360*encoder.getVoltage())/5)+360;
+    }
+
+    public void setStartAngle(double angle){
+        startAngle = angle;
+        calcOffset();
     }
 
     public double getVoltage(){
         return encoder.getVoltage();
     }
 
-    public void setStartAngle(double angle){
-        startAngle = angle;
-        angleDelta = Math.abs(this.getRawAngle()-angle);
-    }
-
     public double getRawAngle(){
-        return calcAngle();
+        return calcRawAngle();
     }
 
-    private double calcAngle(){
-        return (encoder.getVoltage()/5)*360;
+    private double calcRawAngle(){
+        return (encoder.getVoltage()*(360/5));
     }
 
     public double getAngle(){
-        return this.getRawAngle() - angleDelta;
+        angle= encoder.getVoltage()*(360/5)+offset;
+        if(angle>360){
+            angle = angle-360;
+        }
+        return angle;
     }
 
-    public void reset(){                    //change angle delta to reset the encoder back to the start angle 
-        setStartAngle(startAngle);
+    
+
+    public void reset(){                    //set the current angle to start angle, recalculates the offset
+        calcOffset();
     }
 }

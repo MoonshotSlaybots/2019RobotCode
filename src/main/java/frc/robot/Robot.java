@@ -8,6 +8,7 @@
 package frc.robot;
 
 import edu.wpi.first.wpilibj.SpeedController;
+import edu.wpi.first.wpilibj.SpeedControllerGroup;
 import edu.wpi.first.wpilibj.TimedRobot;
 import edu.wpi.first.wpilibj.drive.MecanumDrive;
 import edu.wpi.cscore.UsbCamera;
@@ -28,8 +29,12 @@ public class Robot extends TimedRobot {
   SpeedController FR;
   SpeedController FL;
 
-  Encoder encoderFL;        //create the encoder for the front motor 
+  Encoder encoderFR;      //create the encoder for the motors
+  Encoder encoderFL;
+  Encoder encoderBR;
+  Encoder encoderBL;        
 
+  
   MecanumDrive drive;
   ArmEncoder rotEncoder;
   Joystick controller;
@@ -42,6 +47,7 @@ public class Robot extends TimedRobot {
  //tweaking variables
  double rotationTolerance = 1;       //for auto rotation, stops plus or minus this angle, 
                                       //prevents rocking back and forth
+  double distanceTolerance = 10;
 
   @Override
   public void robotInit() {
@@ -59,6 +65,16 @@ public class Robot extends TimedRobot {
    encoderFL = new Encoder(0,1);                                  //create the encoder 
    encoderFL.setDistancePerPulse((double) 1/1024 * 18.72);        //set the distance per pulse of encoder, 1024 pulses per rotation of rod
                                                                   //wheel circumfrence = 18.72 in
+
+  encoderFR = new Encoder(2,3);                                  //create the encoder 
+  encoderFR.setDistancePerPulse((double) 1/1024 * 18.72);
+
+  encoderBL = new Encoder(4,5);                                  //create the encoder 
+  encoderBL.setDistancePerPulse((double) 1/1024 * 18.72);
+
+  encoderBR = new Encoder(6,7);                                  //create the encoder 
+  encoderBR.setDistancePerPulse((double) 1/1024 * 18.72);
+
 
    drive = new MecanumDrive(FL, BL, FR, BR); // stating the drive type for the bot
    drive.setSafetyEnabled(false);
@@ -106,14 +122,14 @@ public class Robot extends TimedRobot {
  
   @Override
   public void teleopPeriodic() {
-    //System.out.println("lineSensor voltage: " + lineSensor.getVoltage());
+  //  System.out.println("lineSensor voltage: " + lineSensor.getVoltage());
     //System.out.println("Battery voltage is: " + pdp.getVoltage());
     
     drive.driveCartesian(controller.getX()*-1, controller.getY(), controller.getRawAxis(4));
     //possible field oriented drive mode 
     //drive.driveCartesian(controller.getX(), controller.getY(), controller.getZ(), gyro.getAngle());
 
-    System.out.println(gyro.getAngle());
+    //System.out.println(gyro.getAngle());
 
     if(controller.getRawButton(3)){         //red button on controller
         rotateBot(180);                    
@@ -128,10 +144,12 @@ public class Robot extends TimedRobot {
     // }
   }
 
+  public void testInit() {
+    rotEncoder.reset();
+  }
 
   @Override
   public void testPeriodic() {
-    System.out.println("raw: " + rotEncoder.getRawAngle());
     System.out.println("angle: "+rotEncoder.getAngle());
       
 
@@ -139,18 +157,18 @@ public class Robot extends TimedRobot {
 
 
   public double calcRotSpeed(double x){           //calculates the rotation speed based on how far until robot reaches end angle
-    //double y=(x*0.001)+0.2;                       //a linear function
-    double a = (double) -18;
+    double y=(x*0.001)+0.2;                       //a linear function
+    /* double a = (double) -18;
     double b = (double) -202;
     double c = (double) 0.15;
-
-    double y= (double) a/(x+b)+c;        //a rational function
+*/
+    //double y= (double) a/(x+b)+c;        //a rational function
     return y;
   }
 
 
-  public void rotateBot(double angle){                        //rotate the robot a certain angle 
-    double startAngle = gyro.getAngle();                      //get the absolute starting angle of the robor
+  public void rotateBot(double angle){                       //rotate the robot a certain angle 
+    double startAngle = gyro.getAngle();                      //get the absolute starting angle of the robot
     double endAngle = startAngle + angle;                     //calculate the absolute end angle 
 
     double currentAngle = gyro.getAngle();                    //the current angle of the robot, this will be updated constantly
@@ -173,6 +191,29 @@ public class Robot extends TimedRobot {
         return;                                               //exit the loop
       }
     }
+
+  }
+  public void moveBot(double distance, double speed){
+    speed = Math.abs(speed);
+    //encoderBL
+    //encoderBR
+    //encoderFL
+    //encoderFR
+    double startDist = encoderFR.getDistance();
+    double endDist = startDist + distance;
+   while(true){
+     double currentDist = encoderFR.getDistance();
+     if(currentDist<endDist-distanceTolerance){
+      drive.driveCartesian(speed, 0, 0);
+     }
+     else if(currentDist>endDist+distanceTolerance){
+      drive.driveCartesian(-speed, 0, 0);
+     }
+     else{
+      drive.driveCartesian(0, 0, 0);
+      return;
+     }
+   }
   }
 
   public LaunchpadWrapper getLaunchpad (){
