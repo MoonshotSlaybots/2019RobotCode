@@ -15,6 +15,11 @@ public class ButtonManager{
     boolean bhh = grip.getRawButton(0);
     boolean bhm = grip.getRawButton(0);
     boolean bhl = grip.getRawButton(0);
+    // gripper joystick.gtf = gripper tilt forward. gtb = gripper tilt back. bd = boom down. bu = boom up.  
+    boolean gtf = grip.getRawButton(0);
+    boolean gtb = grip.getRawButton(0);
+    boolean bd = grip.getRawButton(0);
+    boolean bu = grip.getRawButton(0);
     // wheel buttons. A = acscend. D = descend. F = front. B = back.
     boolean FA = wheels.getRawButton(0);
     boolean FD = wheels.getRawButton(0);
