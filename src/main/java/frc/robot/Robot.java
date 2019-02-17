@@ -170,19 +170,17 @@ rotEncoder.setStartAngle(30);
   }
 
 //-------------------------------------------------------------------------------------------------------------------------------------------------------------
-  public void rotateBot(double angle){                       //rotate the robot a certain angle 
+  public void rotateBot(double angle){                        //rotate the robot a certain angle 
     double startAngle = gyro.getAngle();                      //get the absolute starting angle of the robot
     double currentAngle = gyro.getAngle();                    //the current angle of the robot, this will be updated constantly
     double endAngle = startAngle + angle;                     //calculate the absolute end angle 
-
+    double rotDist = Math.abs(currentAngle-endAngle);         //find the distance yet to rotate
+    double rotSpeed = calcRotSpeed(rotDist);                  //calculate the rotation speed
 
     while(true){                                              //loop this until the return keyword is hit
       currentAngle = gyro.getAngle();                         //update the robots current angle
-      double rotDist = Math.abs(currentAngle-endAngle);       //find the distance yet to rotate
-      double rotSpeed = calcRotSpeed(rotDist);                //calculate the rotation speed
-
-     // System.out.println("rotation speed= "+rotSpeed);        
-     // System.out.println("angle= "+ currentAngle);
+        // System.out.println("rotation speed= "+rotSpeed);        
+        // System.out.println("angle= "+ currentAngle);
       if(currentAngle<endAngle-rotationTolerance){            //if robot angle is less than end angle(to the left)   
         drive.driveCartesian(0, 0, rotSpeed);                 //rotate clockwise (positive speed)
       }
@@ -202,18 +200,24 @@ rotEncoder.setStartAngle(30);
     double endDist = startDist + distance;
     double currentDist = encoderFR.getDistance();
     speed = Math.abs(speed);
-   while(true){
-     if(currentDist<endDist-distanceTolerance){
+   while(true){                                               //loop this until the return keyword is hit
+     if(currentDist<endDist-distanceTolerance){               //if current distance is less than end distance, it will continue to move
        drive.driveCartesian(speed, 0, 0);
      }
-     else if(currentDist>endDist+distanceTolerance){
+     else if(currentDist>endDist+distanceTolerance){         //if current distance is greater than end distance, it will back up
        drive.driveCartesian(-speed, 0, 0);
      }
     else{
-        drive.driveCartesian(0, 0, 0);
+        drive.driveCartesian(0, 0, 0);                       // if neither greater nor less than end distance it will stop
     return;
      }
    }
+  }
+  //-------------------------------------------------------------------------------------------------------------------------------------------------
+  public void moveArm(double speed, double angle){
+    double startAngle = rotEncoder.getAngle(); 
+    double currentAngle = rotEncoder.getAngle();
+    
   }
 //-------------------------------------------------------------------------------------------------------------------------------------------------
   public LaunchpadWrapper getLaunchpad (){
