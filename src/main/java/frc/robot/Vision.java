@@ -5,6 +5,7 @@ import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -68,7 +69,7 @@ public class Vision implements Runnable{
         CvSink camSink = camServ.getVideo("cam 0");      //creates an object to capture images from cam
         imageA = new Mat();                              //create a new matrix that will hold an image
         camSink.grabFrame(imageA);                       //get the next frame from the camera and store it in imageA
-        
+        System.out.println("imageA = " + imageA.elemSize());
         process(imageA);                            //process the raw image to find the countours of the tapes        
 
         if (filterContoursOutput.size()>0){         //if there are contours in the list set the vairable and continue
@@ -103,6 +104,10 @@ public class Vision implements Runnable{
     private void visionFailed(){                //called when vision proccessing failes, blinks the launchpad LEDs, a return in the run method
                                                 //should be called after this method to end the thread
         System.out.println("vision failed");
+
+        tapeList.clear();
+        targetList.clear();
+        
         t=null;
        // launchpad.setLED("red");        
         //launchpad.blinkLED(50, 10);
@@ -115,14 +120,16 @@ public class Vision implements Runnable{
 
         //step 1: HSV threshold
         Mat hsvThresholdinput = source0;
-        double[] h = {12.9,44.006};
-        double[] s = {91.46,255.0};
-        double[] v = {133.381,255.0};
+        double[] h = {46.94244604316547, 135.68760611205434};
+        double[] s = {84.84712230215827, 255.0};
+        double[] v = {103.19244604316546, 255.0};
         hsvThreshold(hsvThresholdinput, h, s, v,hsvThresholdOutput);   
+        System.out.println("hsv out: "+ hsvThresholdOutput.elemSize());
         
         //step 2: Find countours 
         Mat findContoursInput = hsvThresholdOutput;
         findContours(findContoursInput, false, findContoursOutput); 
+        System.out.println("find contours: "+ findContoursOutput.size());
 
         //step 3: Filter countours
         ArrayList<MatOfPoint> filterContoursContours = findContoursOutput;
@@ -135,12 +142,14 @@ public class Vision implements Runnable{
 		double[] filterContoursSolidity = {0, 100};
 		double filterContoursMaxVertices = 1000000.0;
 		double filterContoursMinVertices = 0;
-		double filterContoursMinRatio = 0.51;
+		double filterContoursMinRatio = 0;
 		double filterContoursMaxRatio = 1.0;
         filterContours(filterContoursContours, filterContoursMinArea, filterContoursMinPerimeter, 
         filterContoursMinWidth, filterContoursMaxWidth, filterContoursMinHeight, filterContoursMaxHeight, 
         filterContoursSolidity, filterContoursMaxVertices, filterContoursMinVertices, filterContoursMinRatio, 
         filterContoursMaxRatio, filterContoursOutput);
+
+        System.out.println("filter contours: "+filterContoursOutput.size());
     }
 
 
@@ -242,6 +251,8 @@ public class Vision implements Runnable{
             tapeList.add(tape);
             //TODO: may need to sort tape List by x values 
         }
+
+        System.out.println("tape List: " + tapeList.size());
     }
 
     private void findTargets(){                     //look through the tape list and find sets of tapes that make up a target
@@ -251,9 +262,10 @@ public class Vision implements Runnable{
         Tape rightTape=null;
 
         for(int i=0; i<tapeList.size(); i++){       //iterate through the tape list
-            if(tapeList.get(i).rotation>0){         //a positive rotation value is the left tape of a target 
+            System.out.println("tape i= " + i + "tape rotation= " +tapeList.get(i).rotation);
+            if(tapeList.get(i).rotation<20){         //~15 degrees is the left tape of a target 
                 leftTape = tapeList.get(i);
-            }else{                                  //if negative rotation, it is the right tape
+            }else{                                  //if not left, it is the right tape
                 rightTape = tapeList.get(i);
             }
 
@@ -265,6 +277,7 @@ public class Vision implements Runnable{
                 rightTape = null;
             }
         }
+        System.out.println("target List: "+targetList.size());
     }
 }
 
@@ -278,7 +291,7 @@ class Tape {                                            //class that holds varia
         boundingRect = rotRect.boundingRect();       
         
         area = boundingRect.area();
-        rotation = rotRect.angle;
+        rotation = Math.abs(rotRect.angle);             //angle is coming out negative, seting it to be positive
     }
 
     public Rect getBoundingRect(){

@@ -90,7 +90,7 @@ public class Robot extends TimedRobot {
    pdp = new PowerDistributionPanel();      // creating Power Distributor Panel
 
    rotEncoder = new ArmEncoder(0);         //create the line sensor on analog port 0
-   rotEncoder.setStartAngle(30);
+   rotEncoder.setStartAngle(20);
 
    UsbCamera camera = CameraServer.getInstance().startAutomaticCapture("cam 0",0);          //set camera settings
    
@@ -156,7 +156,8 @@ public class Robot extends TimedRobot {
   public void testPeriodic() {
     if (controller.getRawButton(3)){
       vision.start();
-    }      
+    }
+    
 
    }
 
