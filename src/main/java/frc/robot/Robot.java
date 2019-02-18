@@ -35,9 +35,9 @@ public class Robot extends TimedRobot {
   Encoder encoderBR;
   Encoder encoderBL;        
   ArmEncoder rotEncoder;
-  AnalogInput us;
-  AnalogInput us2;
-  //create the drive, PDP, Gyro, and Ultrasonic Sensors
+  UltrasonicSensor us;
+  UltrasonicSensor us2;
+  //create the drive, PDP, and Gyro
   MecanumDrive drive;
   PowerDistributionPanel pdp;
   AHRS gyro;
@@ -90,9 +90,9 @@ public class Robot extends TimedRobot {
     rotEncoder = new ArmEncoder(0);         //create the line sensor on analog port 0
     rotEncoder.setStartAngle(30);
 
-    // create the ultrasonic sensor
-    us = new AnalogInput (3);
-    us2= new AnalogInput(2);
+    // create the ultrasonic sensors
+    us = new UltrasonicSensor(3);
+    us2= new UltrasonicSensor(2);
 
     //create the drive, PDP, Gyro
     drive = new MecanumDrive(FL, BL, FR, BR); // stating the drive type for the bot
