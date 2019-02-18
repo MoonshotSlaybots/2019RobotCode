@@ -48,6 +48,7 @@ public class Robot extends TimedRobot {
   Joystick grip;
   Joystick wheels;
   Joystick controller;
+  ButtonManager buttonManager;
 
   Arm arm;
 
@@ -107,6 +108,7 @@ public class Robot extends TimedRobot {
     grip = launchpad.launchpad;
 
     //create buttons
+    buttonManager = new ButtonManager(this);
 
 
     // create variables for vision system and camera
@@ -145,7 +147,8 @@ public class Robot extends TimedRobot {
   public void teleopPeriodic() {
     drive.driveCartesian(controller.getX()*-1, controller.getY(), controller.getRawAxis(4));
 
-    if(controller.getRawButton(3)){         //red button on controller
+    buttonManager.updateButtons();
+    if(buttonManager.controller.getRawButton(3)){         //red button on controller
         rotateBot(180);                    
       }
   }
@@ -157,7 +160,8 @@ public class Robot extends TimedRobot {
   //------------------------------------------------------------------------------------------------------------------------------------------
   @Override
   public void testPeriodic() {
-    if (controller.getRawButton(3)){
+    buttonManager.updateButtons();
+    if (buttonManager.controller.getRawButton(3)){
       vision.start();
     }
     

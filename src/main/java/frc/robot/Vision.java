@@ -1,29 +1,18 @@
 package frc.robot;
 
-import java.awt.Rectangle;
-import java.io.File;
-import java.io.FileWriter;
-import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
 import java.util.List;
-import java.util.Map;
-import java.util.stream.Collectors;
-import java.util.HashMap;
 
-
-import edu.wpi.first.vision.*;
 import edu.wpi.cscore.CvSink;
 import edu.wpi.first.cameraserver.CameraServer;
+import edu.wpi.first.wpilibj.DriverStation;
 
 import org.opencv.core.*;
 import org.opencv.imgproc.*;
-import org.opencv.core.Core.*;
-import org.opencv.features2d.FeatureDetector;
-import org.opencv.imgcodecs.Imgcodecs;
-import org.opencv.objdetect.*;
 
+/**
+ * Vision class, uses camera and a ring light to see retro reflective targets.
+ */
 public class Vision implements Runnable{
     //vision object vairables        
     private Thread t;
@@ -35,6 +24,8 @@ public class Vision implements Runnable{
     private Mat hsvThresholdOutput = new Mat();   
     private ArrayList<MatOfPoint> findContoursOutput = new ArrayList<MatOfPoint>();
     private ArrayList<MatOfPoint> filterContoursOutput = new ArrayList<MatOfPoint>();
+    
+    public Target selectedTarget;
 
     //array lists
     private ArrayList<Tape> tapeList = new ArrayList<Tape>();
@@ -47,14 +38,19 @@ public class Vision implements Runnable{
 
 
     private Mat imageA;
-    private Mat imageB;
-
+    double cameraOffset = 5;            //distance from camera to front of robot
+    /**
+     * Constructor for a Vision object, sets the camera server and launchpad for vision.
+     * @param robot The robot that created this vision object.
+     */
     public Vision(Robot robot){                                  //constructor for a Vision object
         this.robot = robot;                                      //sets the robot variable in the vision object to the robot passed in 
         camServ = this.robot.getCamServer();                     //sets the objects camera server, comes from the getCamServ method in the robot object
         launchpad = this.robot.getLaunchpad();                                      
     }
-
+    /**
+     * Looks to see if another vision thread is running, if not begin a new one and run the "run" method.
+     */
     public void start(){                            //starts the thread and calls the run method
         System.out.println("Starting thread");
         if(t==null){
@@ -63,7 +59,9 @@ public class Vision implements Runnable{
         }
     }
 
-    @Override
+    /**
+     * The main vision method. The vision thread starts from here.
+     */
     public void run() {                                  //the begining of the new thread
         launchpad.setLED("yellow");                      //set the color of the driver station led strip
         CvSink camSink = camServ.getVideo("cam 0");      //creates an object to capture images from cam
@@ -96,23 +94,36 @@ public class Vision implements Runnable{
             visionFailed();
             return;
         }
-    }
 
-    private void visionFailed(){                //called when vision proccessing failes, blinks the launchpad LEDs, a return in the run method
-                                                //should be called after this method to end the thread
-        System.out.println("vision failed");
+        processTargets();
+
+        if (targetList.size()>1){
+            selectTarget();
+        }else{
+            selectedTarget = targetList.get(0);
+        }
+    }
+    /**
+     * Called when vision processing fails. Blinks the launchpad LEDs,
+     * a return in the run method should be called after this method to end the thread.
+     */
+    private void visionFailed(){                
+        DriverStation.reportError("ERROR: Vision failed", false);
 
         tapeList.clear();
         targetList.clear();
         
         t=null;
-       // launchpad.setLED("red");        
-        //launchpad.blinkLED(50, 10);
-        //launchpad.setLED("teamColor");
+        launchpad.setLED("red");        
+        launchpad.blinkLED(50, 10);
+        launchpad.setLED("teamColor");
     }
 
-   
-    private void process(Mat source0){               //processes the image and finds contours 
+   /**
+    * Process the image and find countours
+    * @param source0 The source image as a matrix.
+    */
+    private void process(Mat source0){               
         //step 1: HSV threshold
         Mat hsvThresholdinput = source0;
         double[] h = {46.94244604316547, 135.68760611205434};
@@ -148,15 +159,26 @@ public class Vision implements Runnable{
     }
 
 
-    //Segment an image based on hue, saturation, and value ranges.
+    /**
+     * Segment an image based on hue, saturation, and value ranges.
+     * @param input 
+     * @param hue   
+     * @param sat
+     * @param val
+     * @param out
+     */
 	private void hsvThreshold(Mat input, double[] hue, double[] sat, double[] val, Mat out) {
         Imgproc.cvtColor(input, out, Imgproc.COLOR_BGR2HSV);
         Core.inRange(out, new Scalar(hue[0], sat[0], val[0]),
             new Scalar(hue[1], sat[1], val[1]), out);
     }
 
-    
-	//Sets the values of pixels in a binary image to their distance to the nearest black pixel.
+    /**
+     * 	//Sets the values of pixels in a binary image to their distance to the nearest black pixel.
+     * @param input
+     * @param externalOnly
+     * @param contours
+     */
 	private void findContours(Mat input, boolean externalOnly, List<MatOfPoint> contours) {
         Mat hierarchy = new Mat();
         contours.clear();
@@ -224,7 +246,9 @@ public class Vision implements Runnable{
         }
     }
 
-
+    /**
+     * Looks through the contours list to find tapes. Then puts those into the tapeList.
+     */
     private void findTapes(){
         MatOfPoint2f approxCurve = new MatOfPoint2f();
 
@@ -247,8 +271,10 @@ public class Vision implements Runnable{
 
         System.out.println("tape List: " + tapeList.size());
     }
-
-    private void findTargets(){                     //look through the tape list and find sets of tapes that make up a target
+    /**
+     * Look through the tape list and find sets of tapes that make up a target, add them to the targetList.
+     */
+    private void findTargets(){                 
         Tape leftTape=null;
         Tape rightTape=null;
 
@@ -270,6 +296,28 @@ public class Vision implements Runnable{
         }
         System.out.println("target List: "+targetList.size());
     }
+    /**
+     * Process all the targets in the targetList.
+     */
+    private void processTargets(){
+        for(int i=0; i<targetList.size(); i++){
+            Target target = targetList.get(i);
+            target.calcDimensions();
+            target.calcDistance();
+            target.calcAngle();
+        }
+    }
+    /**
+     * select the center most target
+     */
+    private void selectTarget(){
+        selectedTarget = targetList.get(0);
+        for (int i=1; i < targetList.size(); i++){
+            if(targetList.get(i).angle < selectedTarget.angle){
+                selectedTarget = targetList.get(i);
+            }
+        }
+    }
 }
 
 class Tape {                                            //class that holds variables about a specific tape
@@ -284,7 +332,6 @@ class Tape {                                            //class that holds varia
         area = boundingRect.area();
         rotation = Math.abs(rotRect.angle);             //angle is coming out negative, seting it to be positive
     }
-
     public Rect getBoundingRect(){
         return boundingRect;
     }
@@ -299,14 +346,61 @@ class Tape {                                            //class that holds varia
 class Target{                                           //class that holds information about targets
     Tape leftTape;                                      //the left tape of a target
     Tape rightTape;                                     //the right tape
+
+    Rect boundingRect;                                  //bounding rectangle around the target
+    double width;                                       //the width of the target
+    double height;                                      //the height of the target
+    double center;
+
     double distance;                                    //distance from the robot
     double angle;                                       //angle to the robot
-
+    /**
+     * Constructor: Defines the left and right tapes of a target.
+     * @param L The left tape object.
+     * @param R The right tape object.
+     */
     public Target(Tape L, Tape R){                      //constructor: defines the left and right tape
         leftTape = L;
         rightTape = R;
     }
                                                         //getters and setters for the rest of the variables 
+    
+    public void calcDimensions(){
+        width = leftTape.boundingRect.x - rightTape.boundingRect.x + leftTape.boundingRect.width;
+        double center = ((width/2) + rightTape.boundingRect.x -160)/160;        //the center of the target, in the normalized image
+    }
+    /**
+     * Calculate the distance from the camera to the target based on its size.
+     */
+    public void calcDistance(){
+        distance = 4937/width;
+        /*
+        equation from team 525:
+         Target Distance: Image Inch width = (Target inch width / Target pixel width) * Image pixel width
+                                           = (14.62 /Target pixel width) * 320
+                                           = 4678 / Target pixel width
+                          Distance = (Image inch width / 2) / Tan(Camera image angle / 2)
+                                   = ((4678 / Target pixel width) / 2) / Tan(25.35)
+                                   = (2339 / Tan(25.35)) / Target pixel width
+                                   = 4937 / Target pixel width
+        */
+    }
+    /**
+     * Calculate the angle of the target based on its x value in the image.
+     */
+    public void calcAngle(){
+        angle = Math.atan2(center, 2.11) * 180 / Math.PI;
+        /*
+        equation from team 525:
+         Target Angle:    Tan = x / y where x is the normalized location of the target center (-1 to 1)
+                          When:  x = 1 when the Target Angle is 1/2 of camera view angle      (Axis=48.2/2; LifeCam=50.7/2)
+                                 y = 1 / tan(25.35) = 2.11                                    (Axis=2.2355; LifeCam=2.11)
+        
+                          Target Angle = atan(x, y)
+                                       = atan(x, 2.11)
+        */
+    }
+
     public double getDistance(){
         return distance;
     }

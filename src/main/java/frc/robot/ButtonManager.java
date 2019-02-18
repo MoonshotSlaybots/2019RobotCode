@@ -18,7 +18,7 @@ public class ButtonManager{
     boolean hth = grip.getRawButton(0);
     boolean htm = grip.getRawButton(0);
     boolean htl = grip.getRawButton(0);
-    // gripper joystick.gtf = gripper tilt forward. gtb = gripper tilt back. bd = boom down. bu = boom up.  
+    // gripper joystick. gtf = gripper tilt forward. gtb = gripper tilt back. bd = boom down. bu = boom up.  
     boolean gtf = grip.getRawButton(0);
     boolean gtb = grip.getRawButton(0);
     boolean bd = grip.getRawButton(0); 
