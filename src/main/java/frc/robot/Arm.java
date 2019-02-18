@@ -42,16 +42,33 @@ public class Arm {
         armDriver = new ArmDriver(this);
         isArmDriverWorking = false;
     }
-
+    /**
+     * set the speed of the motor cotrolling joint 1
+     * @param speed a double from -1 to 1 
+     */
     public void setJoint1Controller(double speed){
         joint1Controller.set(speed);
     }
+
+    /**
+     * set the speed of the motor cotrolling joint 2
+     * @param speed a double from -1 to 1 
+     */
     public void setJoint2Controller(double speed){
         joint2Controller.set(speed);
     }
+    /**
+     * set the speed of the motor cotrolling the ball intake
+     * @param speed a double from -1 to 1 
+     */
     public void setBallIntake(double speed){
         ballIntakController.set(speed);
     }
+    /**
+     * set the state of the suction to pick up hatches
+     * 
+     * @param state a boolean, true to enable suction, false to disable/blow
+     */
     public void setSuction(boolean state){
         if(state){
             suctionPistion.extend();
@@ -92,7 +109,9 @@ public class Arm {
    
 
 }
-
+/**
+ * Controlls automatic movement of the arm.
+ */
 class ArmDriver implements Runnable{
     Thread t;
     Arm arm;
@@ -108,6 +127,11 @@ class ArmDriver implements Runnable{
         armJoint2Tolerance = arm.robot.armJoint2Tolerance;
     }
 
+    /**
+     * Begin automatic arm movments, creates a new thread to being a loop
+     * @param joint1EndAngle the end angle of the first joint
+     * @param joint2EndAngle the end angle of the second joint
+     */
     public void start(double joint1EndAngle, double joint2EndAngle){                            //starts the thread and calls the run method
         if(t==null){
             arm.isArmDriverWorking = true;
@@ -120,7 +144,7 @@ class ArmDriver implements Runnable{
     }
 
     public void run() {
-        boolean joint1Done = false;
+        boolean joint1Done = false;         
         boolean joint2Done = false;
 
         while(true){
@@ -158,6 +182,11 @@ class ArmDriver implements Runnable{
         t=null;
         arm.isArmDriverWorking=false;
     }
+    /**
+     * calculate the speed to rotate the arm based on the degrees left to rotate
+     * @param x the degrees remaining (can be negative or positive)
+     * @return the speed to move (range from 0 to 1)
+     */
     private double calcSpeed(double x){
         x = Math.abs(x);
         return x*0.001+0.2;

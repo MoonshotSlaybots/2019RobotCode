@@ -165,6 +165,12 @@ public class Robot extends TimedRobot {
    }
 
   //------------------------------------------------------------------------------------------------------------------------------------------
+  /**
+   * For automatic rotations.
+   * Calculate the roation speed of the robot based on how far it has left to rotate.
+   * @param x Remaining degree measure 0-360 as a double.
+   * @return The speed to move from 0-1 as a double. 
+   */
   public double calcRotSpeed(double x){           //calculates the rotation speed based on how far until robot reaches end angle
     double y=(x*0.001)+0.2;                       //a linear function
     /* double a = (double) -18;
@@ -176,6 +182,11 @@ public class Robot extends TimedRobot {
   }
 
   //------------------------------------------------------------------------------------------------------------------------------------------
+  /**
+   * Rotate the robot a certain degree measure relative to the starting position.
+   * A positive rotation is clockwise.
+   * @param angle The angle measure to rotate as a double.
+   */
   public void rotateBot(double angle){                        //rotate the robot a certain angle 
     double startAngle = gyro.getAngle();                      //get the absolute starting angle of the robot
     double currentAngle = gyro.getAngle();                    //the current angle of the robot, this will be updated constantly
@@ -201,7 +212,12 @@ public class Robot extends TimedRobot {
 
   }
   //------------------------------------------------------------------------------------------------------------------------------------------
-  public void moveBot(double distance, double speed){
+  /**
+   * Move the robot in the Y axis, forward or backwards. 
+   * @param distance The distance to travel, this should always be positive.
+   * @param speed    The speed at which the robot will move from -1 to 1. Positive is forward, negative is backwards.
+   */
+  public void moveBotY(double distance, double speed){
     double startDist = encoderFR.getDistance();
     double endDist = startDist + distance;
     double currentDist = encoderFR.getDistance();
@@ -220,10 +236,17 @@ public class Robot extends TimedRobot {
     }
   }
   //------------------------------------------------------------------------------------------------------------------------------------------
+  /**
+   * 
+   * @return The launchpad in use.
+   */
   public LaunchpadWrapper getLaunchpad (){
     return launchpad;
   }
   //------------------------------------------------------------------------------------------------------------------------------------------
+  /**
+   * @return The current camera server in use.
+   */
   public CameraServer getCamServer(){
     return camServ;
   }
