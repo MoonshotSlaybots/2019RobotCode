@@ -16,6 +16,7 @@ import org.opencv.imgproc.*;
 public class Vision implements Runnable{
     //vision object vairables        
     private Thread t;
+    private boolean isVisionWorking=false;
     private CameraServer camServ;
     private Robot robot;
     private LaunchpadWrapper launchpad;
@@ -52,10 +53,11 @@ public class Vision implements Runnable{
      * Looks to see if another vision thread is running, if not begin a new one and run the "run" method.
      */
     public void start(){                            //starts the thread and calls the run method
-        System.out.println("Starting thread");
-        if(t==null){
-            t=new Thread(this);
-            t.start();
+        System.out.println("call to start vision, isVisionWorking=" + isVisionWorking);
+        if(!isVisionWorking){
+                System.out.println("Starting thread");
+                t=new Thread(this);
+                t.start();
         }
     }
 
@@ -63,6 +65,7 @@ public class Vision implements Runnable{
      * The main vision method. The vision thread starts from here.
      */
     public void run() {                                  //the begining of the new thread
+        isVisionWorking = true;
         launchpad.setLED("yellow");                      //set the color of the driver station led strip
         CvSink camSink = camServ.getVideo("cam 0");      //creates an object to capture images from cam
         imageA = new Mat();                              //create a new matrix that will hold an image
@@ -102,6 +105,10 @@ public class Vision implements Runnable{
         }else{
             selectedTarget = targetList.get(0);
         }
+        System.out.println(selectedTarget.angle);
+        
+        robot.rotateBot(selectedTarget.angle);
+        visionSuccess();
     }
     /**
      * Called when vision processing fails. Blinks the launchpad LEDs,
@@ -114,7 +121,19 @@ public class Vision implements Runnable{
         targetList.clear();
         
         t=null;
+        isVisionWorking = false;
         launchpad.setLED("red");        
+        launchpad.blinkLED(50, 10);
+        launchpad.setLED("teamColor");
+    }
+
+    private void visionSuccess(){
+        tapeList.clear();
+        targetList.clear();
+        
+        t=null;
+        isVisionWorking = false;
+        launchpad.setLED("green");        
         launchpad.blinkLED(50, 10);
         launchpad.setLED("teamColor");
     }
@@ -300,6 +319,7 @@ public class Vision implements Runnable{
      * Process all the targets in the targetList.
      */
     private void processTargets(){
+        System.out.println("processing targets");
         for(int i=0; i<targetList.size(); i++){
             Target target = targetList.get(i);
             target.calcDimensions();
@@ -366,8 +386,11 @@ class Target{                                           //class that holds infor
                                                         //getters and setters for the rest of the variables 
     
     public void calcDimensions(){
+      
         width = leftTape.boundingRect.x - rightTape.boundingRect.x + leftTape.boundingRect.width;
-        double center = ((width/2) + rightTape.boundingRect.x -160)/160;        //the center of the target, in the normalized image
+       
+        center = ((width/2) + rightTape.boundingRect.x -160)/160;        //the center of the target, in the normalized image
+       
     }
     /**
      * Calculate the distance from the camera to the target based on its size.
@@ -389,7 +412,10 @@ class Target{                                           //class that holds infor
      * Calculate the angle of the target based on its x value in the image.
      */
     public void calcAngle(){
-        angle = Math.atan2(center, 2.11) * 180 / Math.PI;
+        angle = (double) Math.atan2(center, (double) 2.11) * (double) 180 / Math.PI;
+        System.out.println("target center: " +center);
+        System.out.println("target width: " +width);
+        System.out.println("target angle: "+angle);
         /*
         equation from team 525:
          Target Angle:    Tan = x / y where x is the normalized location of the target center (-1 to 1)

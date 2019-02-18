@@ -89,17 +89,22 @@ public class Arm {
         if (isArmDriverWorking==false){
             switch (position){
                 case "hatch top":
-                    armDriver.start(116, 153);
+                    armDriver.start(141, 130);
                     break;
                 case "hatch mid":
+                    armDriver.start(96, 173);
                     break;
                 case "hatch low":
+                    armDriver.start(54, 217);
                     break;
                 case "ball top":
+                    armDriver.start(170,100);
                     break;
                 case "ball mid":
+                    armDriver.start(108, 162);
                     break;
                 case "ball low":
+                    armDriver.start(68, 202);
                     break;
                 default:
                     DriverStation.reportError("ERROR: Arm position not defined", true);

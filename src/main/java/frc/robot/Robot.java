@@ -48,13 +48,13 @@ public class Robot extends TimedRobot {
   Joystick grip;
   Joystick wheels;
   Joystick controller;
-  ButtonManager buttonManager;
+  //ButtonManager buttonManager;
 
   Arm arm;
 
 
  //tweaking variables
-  double rotationTolerance = 1;       //for auto rotation, stops plus or minus this angle, 
+  double rotationTolerance = 0.2;       //for auto rotation, stops plus or minus this angle, 
                                       //prevents rocking back and forth
   double distanceTolerance = 10;
   double armJoint1Tolerance = 10;
@@ -104,11 +104,11 @@ public class Robot extends TimedRobot {
     // creating the controller
     controller = new Joystick(0); 
     wheels = new Joystick(1);
-    launchpad = new LaunchpadWrapper(1); 
+    launchpad = new LaunchpadWrapper(2); 
     grip = launchpad.launchpad;
 
     //create buttons
-    buttonManager = new ButtonManager(this);
+   // buttonManager = new ButtonManager(this);
 
 
     // create variables for vision system and camera
@@ -145,10 +145,10 @@ public class Robot extends TimedRobot {
   //------------------------------------------------------------------------------------------------------------------------------------------
   @Override
   public void teleopPeriodic() {
-    drive.driveCartesian(controller.getX()*-1, controller.getY(), controller.getRawAxis(4));
+    drive.driveCartesian(controller.getX(), controller.getY()*-1, controller.getRawAxis(4));
 
-    buttonManager.updateButtons();
-    if(buttonManager.controller.getRawButton(3)){         //red button on controller
+    //buttonManager.updateButtons();
+    if(controller.getRawButton(3)){         //red button on controller
         rotateBot(180);                    
       }
   }
@@ -160,8 +160,10 @@ public class Robot extends TimedRobot {
   //------------------------------------------------------------------------------------------------------------------------------------------
   @Override
   public void testPeriodic() {
-    buttonManager.updateButtons();
-    if (buttonManager.controller.getRawButton(3)){
+    //buttonManager.updateButtons();
+    drive.driveCartesian(controller.getX(), controller.getY()*-1, controller.getRawAxis(4));
+
+    if (controller.getRawButton(3)){
       vision.start();
     }
     
@@ -176,7 +178,7 @@ public class Robot extends TimedRobot {
    * @return The speed to move from 0-1 as a double. 
    */
   public double calcRotSpeed(double x){           //calculates the rotation speed based on how far until robot reaches end angle
-    double y=(x*0.001)+0.2;                       //a linear function
+    double y=(x*0.001)+0.4;                       //a linear function
     /* double a = (double) -18;
     double b = (double) -202;
     double c = (double) 0.15;
