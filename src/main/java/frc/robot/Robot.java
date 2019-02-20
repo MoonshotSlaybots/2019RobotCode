@@ -23,7 +23,6 @@ import com.ctre.phoenix.motorcontrol.can.WPI_TalonSRX;
 import com.kauailabs.navx.frc.AHRS;
 
 public class Robot extends TimedRobot {
-  LaunchpadWrapper launchpad;
 // create speed controller
   SpeedController BL;
   SpeedController BR;
@@ -42,13 +41,12 @@ public class Robot extends TimedRobot {
   PowerDistributionPanel pdp;
   AHRS gyro;
 // create variables for vision system and camera 
-  CameraServer camServ = CameraServer.getInstance();
+  CameraServer driveCamServ = CameraServer.getInstance();
+  CameraServer visCamServ = CameraServer.getInstance();
   Vision vision;
-// create jostick for controllers, buttons, and switches
-  Joystick grip;
-  Joystick wheels;
-  Joystick controller;
-  //ButtonManager buttonManager;
+// create joystick for controllers, buttons, and switches
+  LaunchpadWrapper launchpadWrapper;
+  ButtonManager buttonManager; 
 
   Arm arm;
 
@@ -59,6 +57,8 @@ public class Robot extends TimedRobot {
   double distanceTolerance = 10;
   double armJoint1Tolerance = 10;
   double armJoint2Tolerance = 10;
+  double driveXRotation = 0.05;
+  double driveYRotation = 0.05;
 
   //------------------------------------------------------------------------------------------------------------------------------------------
   @Override
@@ -76,16 +76,16 @@ public class Robot extends TimedRobot {
 
     //create the encoders
     encoderFL = new Encoder(0,1);                                  
-    encoderFL.setDistancePerPulse((double) 1/1024 * 18.72);        //set the distance per pulse of encoder, 1024 pulses per rotation of rod
-                                                                  //wheel circumfrence = 18.72 in
+    encoderFL.setDistancePerPulse((double) 1/1024 * 18.850);        //set the distance per pulse of encoder, 1024 pulses per rotation of rod
+                                                                  //wheel circumfrence = 18.850 in
     encoderFR = new Encoder(2,3);                                  //create the encoder 
-    encoderFR.setDistancePerPulse((double) 1/1024 * 18.72);
+    encoderFR.setDistancePerPulse((double) 1/1024 * 18.850);
 
     encoderBL = new Encoder(4,5);                                  //create the encoder 
-    encoderBL.setDistancePerPulse((double) 1/1024 * 18.72);
+    encoderBL.setDistancePerPulse((double) 1/1024 * 18.850);
 
     encoderBR = new Encoder(6,7);                                  //create the encoder 
-    encoderBR.setDistancePerPulse((double) 1/1024 * 18.72);
+    encoderBR.setDistancePerPulse((double) 1/1024 * 18.850);
 
     rotEncoder = new ArmEncoder(0);         //create the line sensor on analog port 0
     rotEncoder.setStartAngle(30);
@@ -102,22 +102,22 @@ public class Robot extends TimedRobot {
     pdp = new PowerDistributionPanel();      // creating Power Distributor Panel
 
     // creating the controller
-    controller = new Joystick(0); 
-    wheels = new Joystick(1);
-    launchpad = new LaunchpadWrapper(2); 
-    grip = launchpad.launchpad;
-
-    //create buttons
-   // buttonManager = new ButtonManager(this);
+    launchpadWrapper = new LaunchpadWrapper(2);
+    buttonManager = new ButtonManager(this);
+    
 
 
     // create variables for vision system and camera
-    UsbCamera camera = CameraServer.getInstance().startAutomaticCapture("cam 0",0);          //set camera settings
-    camera.setResolution(320, 240);
-    camera.setExposureManual(10);
-    camera.setFPS(20);
-    camera.setBrightness(20);
+    UsbCamera visionCamera = CameraServer.getInstance().startAutomaticCapture("visionCam",0);          //set camera settings
+    visionCamera.setResolution(320, 240);
+    visionCamera.setExposureManual(10);
+    visionCamera.setFPS(20);
+    visionCamera.setBrightness(20);
     vision = new Vision(this);
+    
+    UsbCamera driveCam = CameraServer.getInstance().startAutomaticCapture("driveCam",1);          //set camera settings
+    driveCam.setResolution(320, 240);
+    driveCam.setFPS(20);
   }
 
   //------------------------------------------------------------------------------------------------------------------------------------------
@@ -145,26 +145,30 @@ public class Robot extends TimedRobot {
   //------------------------------------------------------------------------------------------------------------------------------------------
   @Override
   public void teleopPeriodic() {
-    drive.driveCartesian(controller.getX(), controller.getY()*-1, controller.getRawAxis(4));
+    drive.driveCartesian(buttonManager.controller.getX(), buttonManager.controller.getY()*-1, buttonManager.controller.getRawAxis(4));
 
     //buttonManager.updateButtons();
-    if(controller.getRawButton(3)){         //red button on controller
+    if(buttonManager.controller.getRawButton(3)){         //red button on controller
         rotateBot(180);                    
       }
+    System.out.println("us 1= "+us.getDistance());
+    System.out.println("us 2= "+us2.getDistance());
   }
   //------------------------------------------------------------------------------------------------------------------------------------------
   public void testInit() {
     rotEncoder.reset();
+    gyro.reset();
   }
    
   //------------------------------------------------------------------------------------------------------------------------------------------
   @Override
   public void testPeriodic() {
     //buttonManager.updateButtons();
-    drive.driveCartesian(controller.getX(), controller.getY()*-1, controller.getRawAxis(4));
+    drive.driveCartesian(buttonManager.controller.getX(), buttonManager.controller.getY()*-1, buttonManager.controller.getRawAxis(4));
 
-    if (controller.getRawButton(3)){
+    if (buttonManager.controller.getRawButton(3)){
       vision.start();
+      //moveBotX(0, 0.8);
     }
     
 
@@ -178,7 +182,7 @@ public class Robot extends TimedRobot {
    * @return The speed to move from 0-1 as a double. 
    */
   public double calcRotSpeed(double x){           //calculates the rotation speed based on how far until robot reaches end angle
-    double y=(x*0.001)+0.4;                       //a linear function
+    double y=(x*0.001)+0.2;                       //a linear function
     /* double a = (double) -18;
     double b = (double) -202;
     double c = (double) 0.15;
@@ -224,16 +228,19 @@ public class Robot extends TimedRobot {
    * @param speed    The speed at which the robot will move from -1 to 1. Positive is forward, negative is backwards.
    */
   public void moveBotY(double distance, double speed){
+    gyro.reset();
     double startDist = encoderFR.getDistance();
     double endDist = startDist + distance;
     double currentDist = encoderFR.getDistance();
     speed = Math.abs(speed);
+
     while(true){                                               //loop this until the return keyword is hit
+      double angle = gyro.getAngle();
       if(currentDist<endDist-distanceTolerance){               //if current distance is less than end distance, it will continue to move
-        drive.driveCartesian(speed, 0, 0);
+        drive.driveCartesian(0, speed, -angle*driveYRotation);
       }
       else if(currentDist>endDist+distanceTolerance){         //if current distance is greater than end distance, it will back up
-        drive.driveCartesian(-speed, 0, 0);
+        drive.driveCartesian(0, -speed, -angle*driveYRotation);
       }
       else{
         drive.driveCartesian(0, 0, 0);                       // if neither greater nor less than end distance it will stop
@@ -242,18 +249,45 @@ public class Robot extends TimedRobot {
     }
   }
   //------------------------------------------------------------------------------------------------------------------------------------------
+  public void moveBotX(double distance, double speed){
+    gyro.reset();
+    double startDist = encoderFR.getDistance();
+    double endDist = startDist + distance;
+    double currentDist = encoderFR.getDistance();
+  
+    speed = Math.abs(speed);
+    while(true){     
+      double angle = gyro.getAngle();                                          //loop this until the return keyword is hit
+      if(currentDist<endDist-distanceTolerance){               //if current distance is less than end distance, it will continue to move
+        drive.driveCartesian(0, speed, -angle*driveXRotation);
+      }
+      else if(currentDist>endDist+distanceTolerance){         //if current distance is greater than end distance, it will back up
+        drive.driveCartesian(0, -speed,-angle*driveXRotation);
+      }
+      else{
+        drive.driveCartesian(0, 0, 0);                       // if neither greater nor less than end distance it will stop
+        return;
+      }
+    }
+  }
+  
   /**
    * 
    * @return The launchpad in use.
    */
-  public LaunchpadWrapper getLaunchpad (){
-    return launchpad;
+  public LaunchpadWrapper getLaunchpadWrapper (){
+    return launchpadWrapper;
   }
   //------------------------------------------------------------------------------------------------------------------------------------------
   /**
    * @return The current camera server in use.
    */
-  public CameraServer getCamServer(){
-    return camServ;
+  public CameraServer getVisionCamServer(){
+    return visCamServ;
   }
 }
+//------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+// notes:
+//25.1 for an 8- inch wheel
+// 18.8 for a 6 in wheel
+// 12.6 for a 4 inch wheel

@@ -46,8 +46,8 @@ public class Vision implements Runnable{
      */
     public Vision(Robot robot){                                  //constructor for a Vision object
         this.robot = robot;                                      //sets the robot variable in the vision object to the robot passed in 
-        camServ = this.robot.getCamServer();                     //sets the objects camera server, comes from the getCamServ method in the robot object
-        launchpad = this.robot.getLaunchpad();                                      
+        camServ = this.robot.getVisionCamServer();                     //sets the objects camera server, comes from the getCamServ method in the robot object
+        launchpad = this.robot.getLaunchpadWrapper();                                      
     }
     /**
      * Looks to see if another vision thread is running, if not begin a new one and run the "run" method.
@@ -67,7 +67,7 @@ public class Vision implements Runnable{
     public void run() {                                  //the begining of the new thread
         isVisionWorking = true;
         launchpad.setLED("yellow");                      //set the color of the driver station led strip
-        CvSink camSink = camServ.getVideo("cam 0");      //creates an object to capture images from cam
+        CvSink camSink = camServ.getVideo("visionCam");      //creates an object to capture images from cam
         imageA = new Mat();                              //create a new matrix that will hold an image
         camSink.grabFrame(imageA);                       //get the next frame from the camera and store it in imageA
         System.out.println("imageA = " + imageA.elemSize());
@@ -412,7 +412,7 @@ class Target{                                           //class that holds infor
      * Calculate the angle of the target based on its x value in the image.
      */
     public void calcAngle(){
-        angle = (double) Math.atan2(center, (double) 2.11) * (double) 180 / Math.PI;
+        angle = (double) Math.atan2(center, (double) 2.414) * (double) 180 / Math.PI;
         System.out.println("target center: " +center);
         System.out.println("target width: " +width);
         System.out.println("target angle: "+angle);
@@ -421,9 +421,12 @@ class Target{                                           //class that holds infor
          Target Angle:    Tan = x / y where x is the normalized location of the target center (-1 to 1)
                           When:  x = 1 when the Target Angle is 1/2 of camera view angle      (Axis=48.2/2; LifeCam=50.7/2)
                                  y = 1 / tan(25.35) = 2.11                                    (Axis=2.2355; LifeCam=2.11)
-        
+                                 
+                                changed camera angle to 48 degrees
+                                y= 1/ tan(24) = 2.246
                           Target Angle = atan(x, y)
                                        = atan(x, 2.11)
+                                        =atan(x,2.246)
         */
     }
 
