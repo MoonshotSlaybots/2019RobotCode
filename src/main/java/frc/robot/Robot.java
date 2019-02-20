@@ -12,13 +12,10 @@ import edu.wpi.first.wpilibj.TimedRobot;
 import edu.wpi.first.wpilibj.drive.MecanumDrive;
 import edu.wpi.cscore.UsbCamera;
 import edu.wpi.first.cameraserver.CameraServer;
-import edu.wpi.first.wpilibj.AnalogInput;
 import edu.wpi.first.wpilibj.Encoder;
-import edu.wpi.first.wpilibj.Joystick;
 import edu.wpi.first.wpilibj.PowerDistributionPanel;
 import edu.wpi.first.wpilibj.SPI;
 
-import com.ctre.phoenix.motorcontrol.can.WPI_VictorSPX;
 import com.ctre.phoenix.motorcontrol.can.WPI_TalonSRX;
 import com.kauailabs.navx.frc.AHRS;
 
@@ -52,9 +49,8 @@ public class Robot extends TimedRobot {
 
 
  //tweaking variables
-  double rotationTolerance = 0.2;       //for auto rotation, stops plus or minus this angle, 
-                                      //prevents rocking back and forth
-  double distanceTolerance = 10;
+  double rotationTolerance = 0.2;       //for auto rotation, stops plus or minus this angle,                                      
+  double distanceTolerance = 10;        //prevents rocking back and forth
   double armJoint1Tolerance = 10;
   double armJoint2Tolerance = 10;
   double driveXRotation = 0.05;
@@ -163,8 +159,20 @@ public class Robot extends TimedRobot {
   //------------------------------------------------------------------------------------------------------------------------------------------
   @Override
   public void testPeriodic() {
-    //buttonManager.updateButtons();
-    drive.driveCartesian(buttonManager.controller.getX(), buttonManager.controller.getY()*-1, buttonManager.controller.getRawAxis(4));
+    buttonManager.updateButtons();
+    //drive.driveCartesian(buttonManager.controller.getX(), buttonManager.controller.getY()*-1, buttonManager.controller.getRawAxis(4));
+    if(buttonManager.controller.getRawButton(4)){
+      arm.setBallIntake(0.5);
+    }
+    else if(buttonManager.controller.getRawButton(3)){
+      arm.setBallIntake(-0.5);
+    }else{
+      arm.setBallIntake(0);
+    }
+
+    arm.setJoint1Controller(buttonManager.controller.getRawAxis(1));
+    arm.setJoint2Controller(buttonManager.controller.getRawAxis(4));
+
 
     if (buttonManager.controller.getRawButton(3)){
       vision.start();

@@ -4,6 +4,7 @@ import com.ctre.phoenix.motorcontrol.can.WPI_TalonSRX;
 
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.SpeedController;
+import edu.wpi.first.wpilibj.SpeedControllerGroup;
 
 public class Arm {
     Robot robot;
@@ -11,7 +12,9 @@ public class Arm {
     ArmEncoder joint2Encoder;
     SpeedController joint1Controller;
     SpeedController joint2Controller;
-    SpeedController ballIntakController;
+    SpeedController ballIntakeController1;
+    SpeedController ballIntakeController2;
+    SpeedControllerGroup ballIntakeGroup;
 
     Piston suctionPistion;
 
@@ -33,7 +36,10 @@ public class Arm {
         this.robot = robot;
         joint1Controller = new WPI_TalonSRX(5);
         joint2Controller = new WPI_TalonSRX(6);
-        ballIntakController = new WPI_TalonSRX(7);
+        ballIntakeController1 = new WPI_TalonSRX(7);
+        ballIntakeController2 = new WPI_TalonSRX(8);
+        ballIntakeGroup = new SpeedControllerGroup(ballIntakeController1, ballIntakeController2);
+
         suctionPistion = new Piston(0, 1);
 
         joint1Encoder = new ArmEncoder(joint1EncoderPort);
@@ -62,7 +68,7 @@ public class Arm {
      * @param speed a double from -1 to 1 
      */
     public void setBallIntake(double speed){
-        ballIntakController.set(speed);
+        ballIntakeGroup.set(speed);
     }
     /**
      * set the state of the suction to pick up hatches

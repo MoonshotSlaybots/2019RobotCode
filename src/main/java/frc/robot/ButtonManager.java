@@ -40,26 +40,26 @@ public class ButtonManager{
 
         // grip buttons. bl = ball load. ht= hatch. h = high. m = medium. l = low
         blh = grip.getRawButton(0);
-        blm = grip.getRawButton(0);
-        bll = grip.getRawButton(0);
-        hth = grip.getRawButton(0);
-        htm = grip.getRawButton(0);
-        htl = grip.getRawButton(0);
+        blm = grip.getRawButton(1);
+        bll = grip.getRawButton(2);
+        hth = grip.getRawButton(3);
+        htm = grip.getRawButton(4);
+        htl = grip.getRawButton(5);
         // gripper joystick. gtf = gripper tilt forward. gtb = gripper tilt back. bd = boom down. bu = boom up.  
-        gtf = grip.getRawButton(0);
-        gtb = grip.getRawButton(0);
-        bd = grip.getRawButton(0); 
-        bu = grip.getRawButton(0); 
-        // create Switches. ht = hatch. b = Ball. p = pickup. r = release. 
-        htp = grip.getRawButton(0);
-        htr = grip.getRawButton(0);
-        br = grip.getRawButton(0);
-        bp = grip.getRawButton(0);
+        gtf = grip.getRawButton(6);
+        gtb = grip.getRawButton(7);
+        bd = grip.getRawButton(8); 
+        bu = grip.getRawButton(9); 
+        // hatch and ball load Switches. ht = hatch. b = Ball. p = pickup. r = release. 
+        htp = grip.getRawButton(10);
+        htr = grip.getRawButton(11);
+        br = grip.getRawButton(12);
+        bp = grip.getRawButton(13);
         // wheel buttons. F = front. B = back. A = acscend. D = descend.
         FA = wheels.getRawButton(0);
-        FD = wheels.getRawButton(0);
-        BA = wheels.getRawButton(0);
-        BD = wheels.getRawButton(0);
+        FD = wheels.getRawButton(1);
+        BA = wheels.getRawButton(2);
+        BD = wheels.getRawButton(3);
         
     }
     /**
@@ -78,7 +78,7 @@ public class ButtonManager{
      gtb = grip.getRawButton(0);
      bd = grip.getRawButton(0); 
      bu = grip.getRawButton(0); 
-    // create Switches. 
+    // create switches. 
      htp = grip.getRawButton(0);
      htr = grip.getRawButton(0);
      br = grip.getRawButton(0);
