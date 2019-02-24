@@ -32,7 +32,7 @@ public class UltrasonicSensor {
         25.4 mm per inch
         0.024804687v per 1 in
         */
-        return (analogIn.getVoltage() / 0.024804687);
+        return (analogIn.getAverageVoltage() / 0.024804687);
     }
     /** 
      * @return The analog input object
