@@ -17,14 +17,18 @@ import edu.wpi.first.wpilibj.PowerDistributionPanel;
 import edu.wpi.first.wpilibj.SPI;
 
 import com.ctre.phoenix.motorcontrol.can.WPI_TalonSRX;
+import com.ctre.phoenix.motorcontrol.can.WPI_VictorSPX;
 import com.kauailabs.navx.frc.AHRS;
 
 public class Robot extends TimedRobot {
 // create speed controller
   SpeedController BL;
   SpeedController BR;
-  SpeedController FR;
   SpeedController FL;
+  SpeedController FR;
+
+  SpeedController frontLift;
+  SpeedController backLift;
 //create the encoder for the motors and rotation
   Encoder encoderFR;      
   Encoder encoderFL;
@@ -59,16 +63,19 @@ public class Robot extends TimedRobot {
   //------------------------------------------------------------------------------------------------------------------------------------------
   @Override
   public void robotInit() {
-    /*BL = new WPI_VictorSPX(1);         // Motors and where they are plugged into the bot
+    BL = new WPI_VictorSPX(1);         // Motors and their CAN ID's (set in the "CRTE Phenonix" program)
     BR = new WPI_VictorSPX(2);
-    FR = new WPI_VictorSPX(3);
-    FL = new WPI_VictorSPX(0);
-    */
+    FL = new WPI_VictorSPX(3);
+    FR = new WPI_VictorSPX(4);
+
+    frontLift = new WPI_VictorSPX(5);
+    backLift = new WPI_VictorSPX(6);
+    
     //practice robot speed contollers
     BL= new WPI_TalonSRX(1);
     BR= new WPI_TalonSRX(2);
-    FR= new WPI_TalonSRX(3);
     FL= new WPI_TalonSRX(4);
+    FR= new WPI_TalonSRX(3);
 
     //create the encoders
     encoderFL = new Encoder(0,1);                                  
