@@ -234,7 +234,42 @@ public class Robot extends TimedRobot {
         return;                                               //exit the loop
       }
     }
-
+  }
+  //------------------------------------------------------------------------------------------------------------------------------------------
+  /**
+   * Rotate the robot aound a point on the outer frame a certain degree measure relative to the starting position.
+   * A positive rotation is clockwise.
+   * @param angle The angle measure to rotate as a double.
+   * @param rotationPoint An int that selects which point to rotate around, 1=front left, 2=front middle, 3=front left.
+   */
+  public void specialRotateBot(double angle,int rotationPoint){                        //rotate the robot a certain angle 
+    double startAngle = gyro.getAngle();                      //get the absolute starting angle of the robot
+    double currentAngle = gyro.getAngle();                    //the current angle of the robot, this will be updated constantly
+    double endAngle = startAngle + angle;                     //calculate the absolute end angle 
+    double rotDist = Math.abs(currentAngle-endAngle);         //find the distance yet to rotate
+    double rotSpeed = calcRotSpeed(rotDist);                  //calculate the rotation speed
+    //TODO: program cases for other special rotate cases
+    switch (rotationPoint){
+      case 1: 
+        break;
+      case 2:       //front middle
+        while(true){                                              //loop this until the return keyword is hit
+          currentAngle = gyro.getAngle();                         //update the robots current angle
+            
+          if(currentAngle<endAngle-rotationTolerance){            //if robot angle is less than end angle(to the left)   
+            drive.driveCartesian(rotSpeed, 0, rotSpeed);                 //rotate clockwise (positive speed)
+          }
+          else if(currentAngle>endAngle+rotationTolerance){       //if robot angle is greater than end angle (to the right)
+            drive.driveCartesian(-rotSpeed, 0, -rotSpeed);                //rotate counter-clockwise (negative rotation)
+          }
+          else{
+            drive.driveCartesian(0, 0, 0);                        //stop the robot once robot is lined up
+            break;                                               //exit the loop
+          }
+        }
+        break;
+    }
+    
   }
   //------------------------------------------------------------------------------------------------------------------------------------------
   /**
