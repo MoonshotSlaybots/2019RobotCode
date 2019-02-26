@@ -39,7 +39,7 @@ public class ButtonManager{
         grip = robot.getLaunchpadWrapper().launchpad;
 
         // grip buttons. bl = ball load. ht= hatch. h = high. m = medium. l = low
-        blh = grip.getRawButton(0);
+        blh = grip.getRawButton(14);
         blm = grip.getRawButton(1);
         bll = grip.getRawButton(2);
         hth = grip.getRawButton(3);
@@ -56,7 +56,7 @@ public class ButtonManager{
         br = grip.getRawButton(12);
         bp = grip.getRawButton(13);
         // wheel buttons. F = front. B = back. A = acscend. D = descend.
-        FA = wheels.getRawButton(0);
+        FA = wheels.getRawButton(4);
         FD = wheels.getRawButton(1);
         BA = wheels.getRawButton(2);
         BD = wheels.getRawButton(3);

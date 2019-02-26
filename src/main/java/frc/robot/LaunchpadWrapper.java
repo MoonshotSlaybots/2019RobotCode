@@ -9,10 +9,10 @@ import edu.wpi.first.wpilibj.Joystick;
 public class LaunchpadWrapper {
     Joystick launchpad;
                                         //default pins on the launch pad that each LED is connected to
-    int redPin = 3;
-    int greenPin = 6;
+    int redPin = 2;
+    int greenPin = 1;
     int bluePin = 5;
-    int whitePin = 4;
+    int whitePin = 3;
                                         //the states that the leds are in at any given time
     boolean redState=false;
     boolean greenState=false;

@@ -159,15 +159,14 @@ public class Robot extends TimedRobot {
   //------------------------------------------------------------------------------------------------------------------------------------------
   @Override
   public void testPeriodic() {
-    buttonManager.updateButtons();
-    //drive.driveCartesian(buttonManager.controller.getX(), buttonManager.controller.getY()*-1, buttonManager.controller.getRawAxis(4));
+    /*drive.driveCartesian(buttonManager.controller.getX(), buttonManager.controller.getY()*-1, buttonManager.controller.getRawAxis(4));
     if(buttonManager.controller.getRawButton(4)){
       arm.setBallIntake(0.5);
     }
     else if(buttonManager.controller.getRawButton(3)){
       arm.setBallIntake(-0.5);
     }else{
-      arm.setBallIntake(0);
+      arm.setBallIntake(1);
     }
 
     arm.setJoint1Controller(buttonManager.controller.getRawAxis(1));
@@ -177,7 +176,8 @@ public class Robot extends TimedRobot {
     if (buttonManager.controller.getRawButton(3)){
       vision.start();
       //moveBotX(0, 0.8);
-    }
+    }*/
+    launchpadWrapper.setLED("yellow");
     
 
    }
