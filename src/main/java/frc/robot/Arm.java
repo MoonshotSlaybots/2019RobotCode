@@ -1,6 +1,7 @@
 package frc.robot;
 
 import com.ctre.phoenix.motorcontrol.can.WPI_TalonSRX;
+import com.ctre.phoenix.motorcontrol.can.WPI_VictorSPX;
 
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.SpeedController;
@@ -34,10 +35,10 @@ public class Arm {
      */
     public Arm(Robot robot, int joint1EncoderPort, int joint2EncoderPort){
         this.robot = robot;
-        joint1Controller = new WPI_TalonSRX(5);
-        joint2Controller = new WPI_TalonSRX(6);
-        ballIntakeController1 = new WPI_TalonSRX(7);
-        ballIntakeController2 = new WPI_TalonSRX(8);
+        joint1Controller = new WPI_TalonSRX(7);
+        joint2Controller = new WPI_TalonSRX(8);
+        ballIntakeController1 = new WPI_TalonSRX(9);
+        ballIntakeController2 = new WPI_VictorSPX(10);
         ballIntakeGroup = new SpeedControllerGroup(ballIntakeController1, ballIntakeController2);
 
         suctionPistion = new Piston(0, 1);

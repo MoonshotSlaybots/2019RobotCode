@@ -17,14 +17,18 @@ import edu.wpi.first.wpilibj.PowerDistributionPanel;
 import edu.wpi.first.wpilibj.SPI;
 
 import com.ctre.phoenix.motorcontrol.can.WPI_TalonSRX;
+import com.ctre.phoenix.motorcontrol.can.WPI_VictorSPX;
 import com.kauailabs.navx.frc.AHRS;
 
 public class Robot extends TimedRobot {
 // create speed controller
   SpeedController BL;
   SpeedController BR;
-  SpeedController FR;
   SpeedController FL;
+  SpeedController FR;
+
+  SpeedController frontLift;
+  SpeedController backLift;
 //create the encoder for the motors and rotation
   Encoder encoderFR;      
   Encoder encoderFL;
@@ -59,16 +63,19 @@ public class Robot extends TimedRobot {
   //------------------------------------------------------------------------------------------------------------------------------------------
   @Override
   public void robotInit() {
-    /*BL = new WPI_VictorSPX(1);         // Motors and where they are plugged into the bot
+    BL = new WPI_VictorSPX(1);         // Motors and their CAN ID's (set in the "CRTE Phenonix" program)
     BR = new WPI_VictorSPX(2);
-    FR = new WPI_VictorSPX(3);
-    FL = new WPI_VictorSPX(0);
-    */
+    FL = new WPI_VictorSPX(3);
+    FR = new WPI_VictorSPX(4);
+
+    frontLift = new WPI_VictorSPX(5);
+    backLift = new WPI_VictorSPX(6);
+    
     //practice robot speed contollers
     BL= new WPI_TalonSRX(1);
     BR= new WPI_TalonSRX(2);
-    FR= new WPI_TalonSRX(3);
     FL= new WPI_TalonSRX(4);
+    FR= new WPI_TalonSRX(3);
 
     //create the encoders
     encoderFL = new Encoder(0,1);                                  
@@ -227,7 +234,42 @@ public class Robot extends TimedRobot {
         return;                                               //exit the loop
       }
     }
-
+  }
+  //------------------------------------------------------------------------------------------------------------------------------------------
+  /**
+   * Rotate the robot aound a point on the outer frame a certain degree measure relative to the starting position.
+   * A positive rotation is clockwise.
+   * @param angle The angle measure to rotate as a double.
+   * @param rotationPoint An int that selects which point to rotate around, 1=front left, 2=front middle, 3=front left.
+   */
+  public void specialRotateBot(double angle,int rotationPoint){                        //rotate the robot a certain angle 
+    double startAngle = gyro.getAngle();                      //get the absolute starting angle of the robot
+    double currentAngle = gyro.getAngle();                    //the current angle of the robot, this will be updated constantly
+    double endAngle = startAngle + angle;                     //calculate the absolute end angle 
+    double rotDist = Math.abs(currentAngle-endAngle);         //find the distance yet to rotate
+    double rotSpeed = calcRotSpeed(rotDist);                  //calculate the rotation speed
+    //TODO: program cases for other special rotate cases
+    switch (rotationPoint){
+      case 1: 
+        break;
+      case 2:       //front middle
+        while(true){                                              //loop this until the return keyword is hit
+          currentAngle = gyro.getAngle();                         //update the robots current angle
+            
+          if(currentAngle<endAngle-rotationTolerance){            //if robot angle is less than end angle(to the left)   
+            drive.driveCartesian(rotSpeed, 0, rotSpeed);                 //rotate clockwise (positive speed)
+          }
+          else if(currentAngle>endAngle+rotationTolerance){       //if robot angle is greater than end angle (to the right)
+            drive.driveCartesian(-rotSpeed, 0, -rotSpeed);                //rotate counter-clockwise (negative rotation)
+          }
+          else{
+            drive.driveCartesian(0, 0, 0);                        //stop the robot once robot is lined up
+            break;                                               //exit the loop
+          }
+        }
+        break;
+    }
+    
   }
   //------------------------------------------------------------------------------------------------------------------------------------------
   /**
