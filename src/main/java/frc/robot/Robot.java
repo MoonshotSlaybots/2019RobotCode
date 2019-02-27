@@ -53,7 +53,7 @@ public class Robot extends TimedRobot {
 
 
  //tweaking variables
-  double rotationTolerance = 0.2;       //for auto rotation, stops plus or minus this angle,                                      
+  double rotationTolerance = 0.1;       //for auto rotation, stops plus or minus this angle,                                      
   double distanceTolerance = 10;        //prevents rocking back and forth
   double armJoint1Tolerance = 10;
   double armJoint2Tolerance = 10;
@@ -113,7 +113,7 @@ public class Robot extends TimedRobot {
     // create variables for vision system and camera
     UsbCamera visionCamera = CameraServer.getInstance().startAutomaticCapture("visionCam",0);          //set camera settings
     visionCamera.setResolution(320, 240);
-    visionCamera.setExposureManual(10);
+    visionCamera.setExposureManual(30);
     visionCamera.setFPS(20);
     visionCamera.setBrightness(20);
     vision = new Vision(this);
@@ -166,8 +166,8 @@ public class Robot extends TimedRobot {
   //------------------------------------------------------------------------------------------------------------------------------------------
   @Override
   public void testPeriodic() {
-    /*drive.driveCartesian(buttonManager.controller.getX(), buttonManager.controller.getY()*-1, buttonManager.controller.getRawAxis(4));
-    if(buttonManager.controller.getRawButton(4)){
+    drive.driveCartesian(buttonManager.controller.getX(), buttonManager.controller.getY()*-1, buttonManager.controller.getRawAxis(4));
+    /*if(buttonManager.controller.getRawButton(4)){
       arm.setBallIntake(0.5);
     }
     else if(buttonManager.controller.getRawButton(3)){
@@ -178,13 +178,12 @@ public class Robot extends TimedRobot {
 
     arm.setJoint1Controller(buttonManager.controller.getRawAxis(1));
     arm.setJoint2Controller(buttonManager.controller.getRawAxis(4));
-
+    */
 
     if (buttonManager.controller.getRawButton(3)){
       vision.start();
       //moveBotX(0, 0.8);
-    }*/
-    launchpadWrapper.setLED("yellow");
+    }
     
 
    }
@@ -197,12 +196,15 @@ public class Robot extends TimedRobot {
    * @return The speed to move from 0-1 as a double. 
    */
   public double calcRotSpeed(double x){           //calculates the rotation speed based on how far until robot reaches end angle
-    double y=(x*0.001)+0.2;                       //a linear function
-    /* double a = (double) -18;
-    double b = (double) -202;
-    double c = (double) 0.15;
-    */
-    //double y= (double) a/(x+b)+c;        //a rational function
+    //double y=(x*0.001)+0.15;                       //a linear function
+     double a = (double) -70;
+    double b = (double) -344;
+    double c = (double) 0;
+    
+    double y= (double) a/(x+b)+c;        //a rational function
+    if(x<10){
+      y=0.2;
+    }
     return y;
   }
 
@@ -214,13 +216,14 @@ public class Robot extends TimedRobot {
    */
   public void rotateBot(double angle){                        //rotate the robot a certain angle 
     double startAngle = gyro.getAngle();                      //get the absolute starting angle of the robot
+    System.out.println("start angle: " +startAngle );
     double currentAngle = gyro.getAngle();                    //the current angle of the robot, this will be updated constantly
     double endAngle = startAngle + angle;                     //calculate the absolute end angle 
-    double rotDist = Math.abs(currentAngle-endAngle);         //find the distance yet to rotate
-    double rotSpeed = calcRotSpeed(rotDist);                  //calculate the rotation speed
 
     while(true){                                              //loop this until the return keyword is hit
       currentAngle = gyro.getAngle();                         //update the robots current angle
+      double rotDist = Math.abs(currentAngle-endAngle);         //find the distance yet to rotate
+      double rotSpeed = calcRotSpeed(rotDist);                  //calculate the rotation speed
         // System.out.println("rotation speed= "+rotSpeed);        
         // System.out.println("angle= "+ currentAngle);
       if(currentAngle<endAngle-rotationTolerance){            //if robot angle is less than end angle(to the left)   
@@ -231,6 +234,7 @@ public class Robot extends TimedRobot {
       }
       else{
         drive.driveCartesian(0, 0, 0);                        //stop the robot once robot is lined up
+        System.out.println("end angle: "+ currentAngle);
         return;                                               //exit the loop
       }
     }
@@ -255,12 +259,13 @@ public class Robot extends TimedRobot {
       case 2:       //front middle
         while(true){                                              //loop this until the return keyword is hit
           currentAngle = gyro.getAngle();                         //update the robots current angle
-            
+          rotDist = Math.abs(currentAngle-endAngle);
+          rotSpeed = calcRotSpeed(rotDist);
           if(currentAngle<endAngle-rotationTolerance){            //if robot angle is less than end angle(to the left)   
-            drive.driveCartesian(rotSpeed, 0, rotSpeed);                 //rotate clockwise (positive speed)
+            drive.driveCartesian(-rotSpeed, 0, rotSpeed);                 //rotate clockwise (positive speed)
           }
           else if(currentAngle>endAngle+rotationTolerance){       //if robot angle is greater than end angle (to the right)
-            drive.driveCartesian(-rotSpeed, 0, -rotSpeed);                //rotate counter-clockwise (negative rotation)
+            drive.driveCartesian(rotSpeed, 0, -rotSpeed);                //rotate counter-clockwise (negative rotation)
           }
           else{
             drive.driveCartesian(0, 0, 0);                        //stop the robot once robot is lined up
@@ -269,7 +274,6 @@ public class Robot extends TimedRobot {
         }
         break;
     }
-    
   }
   //------------------------------------------------------------------------------------------------------------------------------------------
   /**
@@ -284,7 +288,8 @@ public class Robot extends TimedRobot {
     double currentDist = encoderFR.getDistance();
     speed = Math.abs(speed);
 
-    while(true){                                               //loop this until the return keyword is hit
+    while(true){  
+      currentDist=encoderFR.getDistance();                                             //loop this until the return keyword is hit
       double angle = gyro.getAngle();
       if(currentDist<endDist-distanceTolerance){               //if current distance is less than end distance, it will continue to move
         drive.driveCartesian(0, speed, -angle*driveYRotation);
@@ -307,6 +312,7 @@ public class Robot extends TimedRobot {
   
     speed = Math.abs(speed);
     while(true){     
+      currentDist=encoderFR.getDistance();
       double angle = gyro.getAngle();                                          //loop this until the return keyword is hit
       if(currentDist<endDist-distanceTolerance){               //if current distance is less than end distance, it will continue to move
         drive.driveCartesian(0, speed, -angle*driveXRotation);

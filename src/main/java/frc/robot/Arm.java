@@ -6,6 +6,7 @@ import com.ctre.phoenix.motorcontrol.can.WPI_VictorSPX;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.SpeedController;
 import edu.wpi.first.wpilibj.SpeedControllerGroup;
+import edu.wpi.first.wpilibj.VictorSP;
 
 public class Arm {
     Robot robot;
@@ -35,7 +36,7 @@ public class Arm {
      */
     public Arm(Robot robot, int joint1EncoderPort, int joint2EncoderPort){
         this.robot = robot;
-        joint1Controller = new WPI_TalonSRX(7);
+        joint1Controller = new VictorSP(0);
         joint2Controller = new WPI_TalonSRX(8);
         ballIntakeController1 = new WPI_TalonSRX(9);
         ballIntakeController2 = new WPI_VictorSPX(10);

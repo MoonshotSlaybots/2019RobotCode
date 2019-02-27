@@ -106,9 +106,27 @@ public class Vision implements Runnable{
             selectedTarget = targetList.get(0);
         }
         System.out.println(selectedTarget.angle);
-        
-        robot.rotateBot(selectedTarget.angle);
         visionSuccess();
+        robot.specialRotateBot(selectedTarget.angle,2);
+        /*
+        robot.moveBotX(selectedTarget.distance, 0.5);
+        double speed=0.2;
+        while(true){
+            double sensor1distance=robot.us.getDistance();
+            double sensor2distance=robot.us2.getDistance();
+            if(sensor1distance < sensor2distance+1.5){
+                robot.drive.driveCartesian(-speed, 0, speed);
+            }
+            else if(sensor1distance > sensor2distance+1.5){
+                robot.drive.driveCartesian(speed, 0, -speed);
+            }
+            else{
+                robot.drive.driveCartesian(0, 0, 0);
+            break;
+            }
+        }
+        */
+        endVision();
     }
     /**
      * Called when vision processing fails. Blinks the launchpad LEDs,
@@ -128,16 +146,19 @@ public class Vision implements Runnable{
     }
 
     private void visionSuccess(){
-        tapeList.clear();
-        targetList.clear();
-        
-        t=null;
+       
         isVisionWorking = false;
         launchpad.setLED("green");        
         launchpad.blinkLED(50, 10);
         launchpad.setLED("teamColor");
     }
 
+    private void endVision(){
+        tapeList.clear();
+        targetList.clear();
+        
+        t=null;
+    }
    /**
     * Process the image and find countours
     * @param source0 The source image as a matrix.
@@ -389,7 +410,7 @@ class Target{                                           //class that holds infor
       
         width = leftTape.boundingRect.x - rightTape.boundingRect.x + leftTape.boundingRect.width;
        
-        center = ((width/2) + rightTape.boundingRect.x -160)/160;        //the center of the target, in the normalized image
+        center = (((width/2) + rightTape.boundingRect.x )-160)/160;        //the center of the target, in the normalized image
        
     }
     /**
