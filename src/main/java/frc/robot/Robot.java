@@ -148,7 +148,9 @@ public class Robot extends TimedRobot {
   //------------------------------------------------------------------------------------------------------------------------------------------
   @Override
   public void teleopPeriodic() {
+    // Make controller2's Z rotate be used to turn left and right. It is the Extreme 3D pro joystick controller.
     drive.driveCartesian(buttonManager.controller.getX(), buttonManager.controller.getY()*-1, buttonManager.controller.getRawAxis(4));
+    //drive.driveCartesian(buttonManager.controller2.getX(), buttonManager.controller2.getRawAxis(1)*-1, buttonManager.controller2.getRawAxis(2));
 
     //buttonManager.updateButtons();
     if(buttonManager.controller.getRawButton(3)){         //red button on controller
@@ -166,7 +168,9 @@ public class Robot extends TimedRobot {
   //------------------------------------------------------------------------------------------------------------------------------------------
   @Override
   public void testPeriodic() {
-    drive.driveCartesian(buttonManager.controller.getX(), buttonManager.controller.getY()*-1, buttonManager.controller.getRawAxis(4));
+    //drive.driveCartesian(buttonManager.controller.getX(), buttonManager.controller.getY()*-1, buttonManager.controller.getRawAxis(4));
+    drive.driveCartesian(buttonManager.controller2.getX(), buttonManager.controller2.getRawAxis(1)*-1, buttonManager.controller2.getRawAxis(2));
+
     /*if(buttonManager.controller.getRawButton(4)){
       arm.setBallIntake(0.5);
     }
