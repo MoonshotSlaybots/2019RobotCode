@@ -4,6 +4,7 @@ import com.ctre.phoenix.motorcontrol.can.WPI_TalonSRX;
 import com.ctre.phoenix.motorcontrol.can.WPI_VictorSPX;
 
 import edu.wpi.first.wpilibj.DriverStation;
+import edu.wpi.first.wpilibj.Spark;
 import edu.wpi.first.wpilibj.SpeedController;
 import edu.wpi.first.wpilibj.SpeedControllerGroup;
 import edu.wpi.first.wpilibj.VictorSP;
@@ -23,9 +24,9 @@ public class Arm {
     ArmDriver armDriver;
     boolean isArmDriverWorking;
 
-    final double TOWER_HEIGHT = 40.0;
-    final double L1 = 20.0;
-    final double L2 = 10.0;
+    final double TOWER_HEIGHT = 40.0;           //height of the tower from the ground
+    final double L1 = 20.0;                     //length of the first arm segment
+    final double L2 = 10.0;                     //length of the second arm segment
 
     /**
      * Constructor for an Arm object 
@@ -36,7 +37,7 @@ public class Arm {
      */
     public Arm(Robot robot, int joint1EncoderPort, int joint2EncoderPort){
         this.robot = robot;
-        joint1Controller = new VictorSP(0);
+        joint1Controller = new Spark(2);
         joint2Controller = new WPI_TalonSRX(8);
         ballIntakeController1 = new WPI_TalonSRX(9);
         ballIntakeController2 = new WPI_VictorSPX(10);
@@ -46,6 +47,8 @@ public class Arm {
 
         joint1Encoder = new ArmEncoder(joint1EncoderPort);
         joint2Encoder = new ArmEncoder(joint2EncoderPort);
+        joint1Encoder.setStartAngle(25);
+        joint2Encoder.setStartAngle(350);
 
         armDriver = new ArmDriver(this);
         isArmDriverWorking = false;

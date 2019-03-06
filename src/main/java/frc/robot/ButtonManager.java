@@ -11,7 +11,6 @@ public class ButtonManager{
     Joystick grip;
     Joystick wheels;
     Joystick controller;
-    Joystick controller2;
 
     boolean blh;
     boolean blm;
@@ -23,8 +22,7 @@ public class ButtonManager{
     boolean gtb;
     boolean bd;
     boolean bu;
-    boolean htp;
-    boolean htr;
+    boolean ht;
     boolean br;
     boolean bp;
     boolean FA;
@@ -38,7 +36,6 @@ public class ButtonManager{
         controller = new Joystick(0); 
         wheels = new Joystick(1);
         grip = robot.getLaunchpadWrapper().launchpad;
-        controller2 = new Joystick(3);
 
         // grip buttons. bl = ball load. ht= hatch. h = high. m = medium. l = low
         blh = grip.getRawButton(14);
@@ -47,16 +44,18 @@ public class ButtonManager{
         hth = grip.getRawButton(3);
         htm = grip.getRawButton(4);
         htl = grip.getRawButton(5);
+
         // gripper joystick. gtf = gripper tilt forward. gtb = gripper tilt back. bd = boom down. bu = boom up.  
         gtf = grip.getRawButton(6);
         gtb = grip.getRawButton(7);
         bd = grip.getRawButton(8); 
         bu = grip.getRawButton(9); 
+
         // hatch and ball load Switches. ht = hatch. b = Ball. p = pickup. r = release. 
-        htp = grip.getRawButton(10);
-        htr = grip.getRawButton(11);
+        ht = grip.getRawButton(10);  //suction position
         br = grip.getRawButton(12);
         bp = grip.getRawButton(13);
+
         // wheel buttons. F = front. B = back. A = acscend. D = descend.
         FA = wheels.getRawButton(4);
         FD = wheels.getRawButton(1);
@@ -68,26 +67,30 @@ public class ButtonManager{
      * Update all buttons to their current values;
      */
     public void updateButtons(){
-     // grip buttons. 
-     blh = grip.getRawButton(0);
-     blm = grip.getRawButton(0);
-     bll = grip.getRawButton(0);
-     hth = grip.getRawButton(0);
-     htm = grip.getRawButton(0);
-     htl = grip.getRawButton(0);
-    // gripper joystick.  
-     gtf = grip.getRawButton(0);
-     gtb = grip.getRawButton(0);
-     bd = grip.getRawButton(0); 
-     bu = grip.getRawButton(0); 
-    // create switches. 
-     htp = grip.getRawButton(0);
-     htr = grip.getRawButton(0);
-     br = grip.getRawButton(0);
-     bp = grip.getRawButton(0);
-// wheel buttons.
-     FA = wheels.getRawButton(0);
-     FD = wheels.getRawButton(0);
+        // grip buttons. bl = ball load. ht= hatch. h = high. m = medium. l = low
+        blh = grip.getRawButton(14);
+        blm = grip.getRawButton(1);
+        bll = grip.getRawButton(2);
+        hth = grip.getRawButton(3);
+        htm = grip.getRawButton(4);
+        htl = grip.getRawButton(5);
+
+        // gripper joystick. gtf = gripper tilt forward. gtb = gripper tilt back. bd = boom down. bu = boom up.  
+        gtf = grip.getRawButton(6);
+        gtb = grip.getRawButton(7);
+        bd = grip.getRawButton(8); 
+        bu = grip.getRawButton(9); 
+
+        // hatch and ball load Switches. ht = hatch. b = Ball. p = pickup. r = release. 
+        ht = grip.getRawButton(10);
+        br = grip.getRawButton(12);
+        bp = grip.getRawButton(13);
+        
+        // wheel buttons. F = front. B = back. A = acscend. D = descend.
+        FA = wheels.getRawButton(4);
+        FD = wheels.getRawButton(1);
+        BA = wheels.getRawButton(2);
+        BD = wheels.getRawButton(3);
     }
 
     public boolean isBlh() {
@@ -130,12 +133,8 @@ public class ButtonManager{
         return this.bu;
     }
 
-    public boolean isHtp() {
-        return this.htp;
-    }
-
-    public boolean isHtr() {
-        return this.htr;
+    public boolean isht() {
+        return this.ht;
     }
 
     public boolean isBr() {

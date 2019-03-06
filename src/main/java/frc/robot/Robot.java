@@ -15,6 +15,7 @@ import edu.wpi.first.cameraserver.CameraServer;
 import edu.wpi.first.wpilibj.Encoder;
 import edu.wpi.first.wpilibj.PowerDistributionPanel;
 import edu.wpi.first.wpilibj.SPI;
+import edu.wpi.first.wpilibj.Spark;
 
 import com.ctre.phoenix.motorcontrol.can.WPI_TalonSRX;
 import com.ctre.phoenix.motorcontrol.can.WPI_VictorSPX;
@@ -34,7 +35,6 @@ public class Robot extends TimedRobot {
   Encoder encoderFL;
   Encoder encoderBR;
   Encoder encoderBL;        
-  ArmEncoder rotEncoder;
   UltrasonicSensor us;
   UltrasonicSensor us2;
   //create the drive, PDP, and Gyro
@@ -57,7 +57,8 @@ public class Robot extends TimedRobot {
   double distanceTolerance = 10;        //prevents rocking back and forth
   double armJoint1Tolerance = 10;
   double armJoint2Tolerance = 10;
-  double driveXRotation = 0.05;
+  // stabilizes straight line movement. larger numbers corrects deviation
+  double driveXRotation = 0.05;   
   double driveYRotation = 0.05;
 
   //------------------------------------------------------------------------------------------------------------------------------------------
@@ -68,8 +69,10 @@ public class Robot extends TimedRobot {
     FL = new WPI_VictorSPX(3);
     FR = new WPI_VictorSPX(4);
 
-    frontLift = new WPI_VictorSPX(5);
-    backLift = new WPI_VictorSPX(6);
+    frontLift = new Spark(0);
+    backLift = new Spark(1);
+
+    arm = new Arm(this, 0, 1);
     
     //practice robot speed contollers
     BL= new WPI_TalonSRX(1);
@@ -89,9 +92,6 @@ public class Robot extends TimedRobot {
 
     encoderBR = new Encoder(6,7);                                  //create the encoder 
     encoderBR.setDistancePerPulse((double) 1/1024 * 18.850);
-
-    rotEncoder = new ArmEncoder(0);         //create the line sensor on analog port 0
-    rotEncoder.setStartAngle(30);
 
     // create the ultrasonic sensors
     us = new UltrasonicSensor(3);
@@ -148,28 +148,78 @@ public class Robot extends TimedRobot {
   //------------------------------------------------------------------------------------------------------------------------------------------
   @Override
   public void teleopPeriodic() {
-    // Make controller2's Z rotate be used to turn left and right. It is the Extreme 3D pro joystick controller.
-    drive.driveCartesian(buttonManager.controller.getX(), buttonManager.controller.getY()*-1, buttonManager.controller.getRawAxis(4));
-    //drive.driveCartesian(buttonManager.controller2.getX(), buttonManager.controller2.getRawAxis(1)*-1, buttonManager.controller2.getRawAxis(2));
+    buttonManager.updateButtons();
 
-    //buttonManager.updateButtons();
+    drive.driveCartesian(buttonManager.controller.getX(), buttonManager.controller.getY()*-1, buttonManager.controller.getRawAxis(4));
+
     if(buttonManager.controller.getRawButton(3)){         //red button on controller
         rotateBot(180);                    
       }
+
+    //front assenced
+    if(buttonManager.isFA()){
+      frontLift.set(1);
+    }
+    else{
+      frontLift.set(0);
+    }
+
+    //front descend 
+    if(buttonManager.isFD()){
+      frontLift.set(-1);
+    }else{
+      frontLift.set(0);
+    }
+
+    //back assenced 
+    if(buttonManager.isBA()){
+      backLift.set(1);
+    }else{
+      backLift.set(0);
+    }
+
+    //back descend
+    if(buttonManager.isBD()){
+      backLift.set(-1);
+    }else{
+      backLift.set(0);
+    }
+
+
+    //suction (switch)
+    if(buttonManager.isht()){
+      arm.setSuction(true);
+    }else{
+      arm.setSuction(false);
+    }
+
+    //ball intake (pickup)
+    if(buttonManager.isBp()){
+      arm.setBallIntake(1);
+    }else{
+      arm.setBallIntake(0);
+    }
+
+    //ball outtake (release)
+    if(buttonManager.isBr()){
+      arm.setBallIntake(-1);
+    }else{
+      arm.setBallIntake(0);
+    }
+
+
     System.out.println("us 1= "+us.getDistance());
     System.out.println("us 2= "+us2.getDistance());
   }
   //------------------------------------------------------------------------------------------------------------------------------------------
   public void testInit() {
-    rotEncoder.reset();
     gyro.reset();
   }
    
   //------------------------------------------------------------------------------------------------------------------------------------------
   @Override
   public void testPeriodic() {
-    //drive.driveCartesian(buttonManager.controller.getX(), buttonManager.controller.getY()*-1, buttonManager.controller.getRawAxis(4));
-    drive.driveCartesian(buttonManager.controller2.getX(), buttonManager.controller2.getRawAxis(1)*-1, buttonManager.controller2.getRawAxis(2));
+    drive.driveCartesian(buttonManager.controller.getX(), buttonManager.controller.getY()*-1, buttonManager.controller.getRawAxis(4));
 
     /*if(buttonManager.controller.getRawButton(4)){
       arm.setBallIntake(0.5);
