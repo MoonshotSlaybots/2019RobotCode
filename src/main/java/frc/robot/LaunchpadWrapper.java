@@ -20,6 +20,7 @@ public class LaunchpadWrapper {
     boolean whiteState=false;
 
     String teamColor=null;
+    String previosColor=null;
 
     /**
      * Creates a joystick to reference the launchpad and sets the team color automatically.
@@ -121,7 +122,7 @@ public class LaunchpadWrapper {
             case "off":
                 //colors already cleared at beginning
                 break;
-            default:                                                        //if the input is none defined, throw an error
+            default:                                                        //if the input is not defined, throw an error
                 DriverStation.reportError("Launchpad: LED color not defined", true);       
                 break;
         }
@@ -156,7 +157,20 @@ public class LaunchpadWrapper {
         thread.start();                                                     //start the thread (will call the run() method)
     }
                                                                     //this is in a new thread so it does not tie down the system
-                                                                    //by using the thread.sleep() method which stops the code for a certain time
+                                                                    //by using the thread.sleep() method which stops the code for a certain tim
+    /**
+     * Blink the lights magenta to indicate an error has occured. (red would conflict with the team color)
+     */
+    public void errorBlink(){
+        boolean red = redState;
+        boolean green = greenState;
+        boolean blue = blueState;
+        boolean white =  whiteState;
+
+        setLED("magenta");
+        blinkLED(50, 10);
+        setLED(red, green, blue, white);
+    }
 }
 
 class BlinkLED implements Runnable{             //a class to handle blinking the LEDs

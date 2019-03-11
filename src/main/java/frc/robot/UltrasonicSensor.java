@@ -15,13 +15,14 @@ public class UltrasonicSensor {
         analogIn = new AnalogInput(port);
     }
     /**
-     * @return The voltage of the sensor.
+     * @return The raw voltage of the sensor.
      */
     public double getVoltage(){
         return analogIn.getVoltage();
     }
     /**
      * Calculates and returns the distance based on the voltage recieved from the sensor.
+     * Averages voltage over a short period of time to get a smoother reading.
      * @return Distance in inches as a double.
      */
     public double getDistance(){
