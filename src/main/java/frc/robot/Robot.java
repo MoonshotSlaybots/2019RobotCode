@@ -12,6 +12,7 @@ import edu.wpi.first.wpilibj.TimedRobot;
 import edu.wpi.first.wpilibj.drive.MecanumDrive;
 import edu.wpi.cscore.UsbCamera;
 import edu.wpi.first.cameraserver.CameraServer;
+import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.Encoder;
 import edu.wpi.first.wpilibj.PowerDistributionPanel;
 import edu.wpi.first.wpilibj.SPI;
@@ -36,8 +37,8 @@ public class Robot extends TimedRobot {
   Encoder encoderFL;
   Encoder encoderBR;
   Encoder encoderBL;        
-  UltrasonicSensor us;
-  UltrasonicSensor us2;
+  UltrasonicSensor leftUS;
+  UltrasonicSensor rightUS;
   //create the drive, PDP, and Gyro
   MecanumDrive drive;
   PowerDistributionPanel pdp;
@@ -95,8 +96,8 @@ public class Robot extends TimedRobot {
     encoderBR.setDistancePerPulse((double) 1/1024 * 18.850);
 
     // create the ultrasonic sensors
-    us = new UltrasonicSensor(3);
-    us2= new UltrasonicSensor(2);
+    leftUS = new UltrasonicSensor(3);
+    rightUS= new UltrasonicSensor(2);
 
     //create the drive, PDP, Gyro
     drive = new MecanumDrive(FL, BL, FR, BR); // stating the drive type for the bot
@@ -209,8 +210,8 @@ public class Robot extends TimedRobot {
     }
 
 
-    System.out.println("us 1= "+us.getDistance());
-    System.out.println("us 2= "+us2.getDistance());
+    System.out.println("left u.s.= "+leftUS.getDistance());
+    System.out.println("right u.s.= "+rightUS.getDistance());
   }
   //------------------------------------------------------------------------------------------------------------------------------------------
   public void testInit() {
@@ -334,6 +335,43 @@ public class Robot extends TimedRobot {
   }
   //------------------------------------------------------------------------------------------------------------------------------------------
   /**
+   * using the ultrasonic sensors, squares the frame of the robot up with the wall 
+   * that it is currently facing. 
+   */
+  public void squareFrame(){
+    int rotationSteps = 5;                                      //the number of degrees to rotate the bot each time
+    int squareTolerance = 1;                                    //tolerance in inches, robot will stop plus or minus this much
+
+    double leftSensorDist = leftUS.getDistance();
+    double rightSensorDist = rightUS.getDistance();
+
+    double startingAngle = gyro.getAngle();
+
+    if(leftSensorDist >24 || rightSensorDist >24 || Math.abs(rightSensorDist-leftSensorDist) >15) {         //if either reads more than 2 feet, or if the difference is more than 15 in, abort 
+      fancyErrorReport("squaring failed", false);
+      return;
+    }
+
+    while(true){
+      leftSensorDist = leftUS.getDistance();
+      rightSensorDist = rightUS.getDistance();
+
+      if(Math.abs(gyro.getAngle()-startingAngle) > 45){
+        break;
+      }
+
+      if(leftSensorDist>rightSensorDist+squareTolerance){
+        specialRotateBot(rotationSteps, 2);       //rotate the bot clockwise, around the front middle of the frame
+      }else if (leftSensorDist<rightSensorDist-squareTolerance){
+        specialRotateBot(-rotationSteps, 2);       //rotate the bot counter-clockwise, around the front middle of the frame
+      }else{
+        break;
+      }
+    }
+
+  }
+  //------------------------------------------------------------------------------------------------------------------------------------------
+  /**
    * Move the robot in the Y axis, forward or backwards. 
    * @param distance The distance to travel, this should always be positive.
    * @param speed    The speed at which the robot will move from -1 to 1. Positive is forward, negative is backwards.
@@ -397,6 +435,16 @@ public class Robot extends TimedRobot {
    */
   public CameraServer getVisionCamServer(){
     return visCamServ;
+  }
+  //------------------------------------------------------------------------------------------------------------------------------------------
+  /**
+   * @param message the string that contains the error message
+   * @param stackTrace if true, append stack trace to the end of error
+   * in addition to a normal error report, flash the driverstation LEDs magenta 
+   */
+  public void fancyErrorReport (String message, boolean stackTrace){
+    DriverStation.reportError(message, stackTrace);
+    getLaunchpadWrapper().errorBlink();
   }
 }
 //------------------------------------------------------------------------------------------------------------------------------------------------------------------------

@@ -117,7 +117,7 @@ public class Arm {
                     armDriver.start(68, 202);
                     break;
                 default:
-                    DriverStation.reportError("ERROR: Arm position not defined", true);
+                    robot.fancyErrorReport("ERROR: Arm position not defined", true);
             }
         }
     }

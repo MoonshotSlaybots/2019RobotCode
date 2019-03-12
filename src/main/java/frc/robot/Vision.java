@@ -64,23 +64,23 @@ public class Vision implements Runnable{
     /**
      * The main vision method. The vision thread starts from here.
      */
-    public void run() {                                  //the begining of the new thread
+    public void run() {                                         //the begining of the new thread
         isVisionWorking = true;
-        launchpad.setLED("yellow");                      //set the color of the driver station led strip
-        CvSink camSink = camServ.getVideo("visionCam");      //creates an object to capture images from cam
-        imageA = new Mat();                              //create a new matrix that will hold an image
-        camSink.grabFrame(imageA);                       //get the next frame from the camera and store it in imageA
+        launchpad.setLED("yellow");                             //set the color of the driver station led strip
+        CvSink camSink = camServ.getVideo("visionCam");         //creates an object to capture images from cam
+        imageA = new Mat();                                     //create a new matrix that will hold an image
+        camSink.grabFrame(imageA);                              //get the next frame from the camera and store it in imageA
         System.out.println("imageA = " + imageA.elemSize());
-        process(imageA);                            //process the raw image to find the countours of the tapes        
+        process(imageA);                                        //process the raw image to find the countours of the tapes        
 
-        if (filterContoursOutput.size()>0){         //if there are contours in the list set the vairable and continue
+        if (filterContoursOutput.size()>0){                     //if there are contours in the list set the vairable and continue
             contourFound = true;
-        }else{                                      //if there are not contours, call the vision failed method and exit the run method
+        }else{                                                  //if there are not contours, call the vision failed method and exit the run method
             visionFailed();
             return;
         }
 
-        findTapes();                                //look through the contour list to find tapes and add them to the tapeList
+        findTapes();                                            //look through the contour list to find tapes and add them to the tapeList
 
         if(tapeList.size()>0){
             tapeFound=true;
@@ -105,44 +105,30 @@ public class Vision implements Runnable{
         }else{
             selectedTarget = targetList.get(0);
         }
-        System.out.println(selectedTarget.angle);
+
+        launchpad.setLED("green");          //blink green to show that a target has been found
+        launchpad.blinkLED(100, 5);
+        launchpad.setLED("yellow");         //solid yellow to show robot is moving
+
+
+
+        robot.specialRotateBot(selectedTarget.angle, 2);            //rotate robot so target will be in the center of camera vision
+
+        robot.moveBotY(selectedTarget.distance*0.75, 0.8);          //drive the bot 75% of the way to the target at 80% speed
+
+        robot.squareFrame();                                        //square the frame with the wall
+
+
         visionSuccess();
-        robot.specialRotateBot(selectedTarget.angle,2);
-        /*
-        robot.moveBotX(selectedTarget.distance, 0.5);
-        double speed=0.2;
-        while(true){
-            double sensor1distance=robot.us.getDistance();
-            double sensor2distance=robot.us2.getDistance();
-            if(sensor1distance < sensor2distance+1.5){
-                robot.drive.driveCartesian(-speed, 0, speed);
-            }
-            else if(sensor1distance > sensor2distance+1.5){
-                robot.drive.driveCartesian(speed, 0, -speed);
-            }
-            else{
-                robot.drive.driveCartesian(0, 0, 0);
-            break;
-            }
-        }
-        */
-        endVision();
     }
     /**
-     * Called when vision processing fails. Blinks the launchpad LEDs,
-     * a return in the run method should be called after this method to end the thread.
+     * Called when vision processing fails. reports and error and blinks launchpad LEDs.
+     * A return in the run method should be called after this method to end the thread.
      */
     private void visionFailed(){                
-        DriverStation.reportError("ERROR: Vision failed", false);
+        robot.fancyErrorReport("ERROR: Vision failed", false);
 
-        tapeList.clear();
-        targetList.clear();
-        
-        t=null;
-        isVisionWorking = false;
-        launchpad.setLED("red");        
-        launchpad.blinkLED(50, 10);
-        launchpad.setLED("teamColor");
+        endVision();
     }
 
     private void visionSuccess(){
@@ -151,13 +137,14 @@ public class Vision implements Runnable{
         launchpad.setLED("green");        
         launchpad.blinkLED(50, 10);
         launchpad.setLED("teamColor");
+        endVision();
     }
 
     private void endVision(){
         tapeList.clear();
         targetList.clear();
         
-        t=null;
+        isVisionWorking = false;
     }
    /**
     * Process the image and find countours
@@ -337,7 +324,7 @@ public class Vision implements Runnable{
         System.out.println("target List: "+targetList.size());
     }
     /**
-     * Process all the targets in the targetList.
+     * Runs calculations on all the targets in the targetList.
      */
     private void processTargets(){
         System.out.println("processing targets");
