@@ -15,11 +15,12 @@ import edu.wpi.first.cameraserver.CameraServer;
 import edu.wpi.first.wpilibj.Encoder;
 import edu.wpi.first.wpilibj.PowerDistributionPanel;
 import edu.wpi.first.wpilibj.SPI;
-import edu.wpi.first.wpilibj.Spark;
 
 import com.ctre.phoenix.motorcontrol.can.WPI_TalonSRX;
 import com.ctre.phoenix.motorcontrol.can.WPI_VictorSPX;
 import com.kauailabs.navx.frc.AHRS;
+import com.revrobotics.CANSparkMax;
+import com.revrobotics.CANSparkMaxLowLevel;
 
 public class Robot extends TimedRobot {
 // create speed controller
@@ -27,7 +28,7 @@ public class Robot extends TimedRobot {
   SpeedController BR;
   SpeedController FL;
   SpeedController FR;
-
+// lifts
   SpeedController frontLift;
   SpeedController backLift;
 //create the encoder for the motors and rotation
@@ -69,8 +70,8 @@ public class Robot extends TimedRobot {
     FL = new WPI_VictorSPX(3);
     FR = new WPI_VictorSPX(4);
 
-    frontLift = new Spark(0);
-    backLift = new Spark(1);
+    frontLift = new CANSparkMax(5, CANSparkMaxLowLevel.MotorType.kBrushless);
+    backLift =  new CANSparkMax(6, CANSparkMaxLowLevel.MotorType.kBrushless);
 
     arm = new Arm(this, 0, 1);
     
@@ -219,6 +220,8 @@ public class Robot extends TimedRobot {
   //------------------------------------------------------------------------------------------------------------------------------------------
   @Override
   public void testPeriodic() {
+    frontLift.set(1);
+    backLift.set(1);
     drive.driveCartesian(buttonManager.controller.getX(), buttonManager.controller.getY()*-1, buttonManager.controller.getRawAxis(4));
 
     /*if(buttonManager.controller.getRawButton(4)){
@@ -227,7 +230,7 @@ public class Robot extends TimedRobot {
     else if(buttonManager.controller.getRawButton(3)){
       arm.setBallIntake(-0.5);
     }else{
-      arm.setBallIntake(1);
+      arm.setBallIntake(1);q1
     }
 
     arm.setJoint1Controller(buttonManager.controller.getRawAxis(1));
@@ -397,7 +400,9 @@ public class Robot extends TimedRobot {
   }
 }
 //------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-// notes:
-//25.1 for an 8- inch wheel
-// 18.8 for a 6 in wheel
-// 12.6 for a 4 inch wheel
+/* Note:
+25.1 for an 8- inch wheel
+ 18.8 for a 6 in wheel
+ 12.6 for a 4 inch wheel
+
+ */
