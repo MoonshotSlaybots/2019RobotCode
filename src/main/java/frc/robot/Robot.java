@@ -51,7 +51,7 @@ public class Robot extends TimedRobot {
   LaunchpadWrapper launchpadWrapper;
   ButtonManager buttonManager; 
 
-  Arm arm;
+  //Arm arm;
 
 
  //tweaking variables
@@ -74,7 +74,7 @@ public class Robot extends TimedRobot {
     frontLift = new CANSparkMax(5, CANSparkMaxLowLevel.MotorType.kBrushless);
     backLift =  new CANSparkMax(6, CANSparkMaxLowLevel.MotorType.kBrushless);
 
-    arm = new Arm(this, 0, 1);
+    //arm = new Arm(this, 0, 1);
     
     //practice robot speed contollers
     BL= new WPI_TalonSRX(1);
@@ -189,26 +189,26 @@ public class Robot extends TimedRobot {
 
 
     //suction (switch)
-    if(buttonManager.isht()){
+    /*if(buttonManager.isht()){
       arm.setSuction(true);
     }else{
       arm.setSuction(false);
     }
-
+*/
     //ball intake (pickup)
-    if(buttonManager.isBp()){
+  /*  if(buttonManager.isBp()){
       arm.setBallIntake(1);
     }else{
       arm.setBallIntake(0);
     }
-
+*/
     //ball outtake (release)
-    if(buttonManager.isBr()){
+   /* if(buttonManager.isBr()){
       arm.setBallIntake(-1);
     }else{
       arm.setBallIntake(0);
     }
-
+*/
 
     System.out.println("left u.s.= "+leftUS.getDistance());
     System.out.println("right u.s.= "+rightUS.getDistance());
@@ -221,10 +221,12 @@ public class Robot extends TimedRobot {
   //------------------------------------------------------------------------------------------------------------------------------------------
   @Override
   public void testPeriodic() {
-    frontLift.set(1);
-    backLift.set(1);
+    
     drive.driveCartesian(buttonManager.controller.getX(), buttonManager.controller.getY()*-1, buttonManager.controller.getRawAxis(4));
 
+    if(buttonManager.controller.getRawButton(3)){
+      squareFrame();
+    }
     /*if(buttonManager.controller.getRawButton(4)){
       arm.setBallIntake(0.5);
     }
@@ -238,10 +240,8 @@ public class Robot extends TimedRobot {
     arm.setJoint2Controller(buttonManager.controller.getRawAxis(4));
     */
 
-    if (buttonManager.controller.getRawButton(3)){
-      vision.start();
       //moveBotX(0, 0.8);
-    }
+    
     
 
    }
@@ -261,7 +261,7 @@ public class Robot extends TimedRobot {
     
     double y= (double) a/(x+b)+c;        //a rational function
     if(x<10){
-      y=0.2;
+      y=0.17;
     }
     return y;
   }

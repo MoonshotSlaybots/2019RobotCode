@@ -22,8 +22,10 @@ public class ButtonManager{
     boolean gtb;
     boolean bd;
     boolean bu;
-    boolean ht;
+    boolean htp;
+    boolean htr;
     boolean br;
+    boolean ht;
     boolean bp;
     boolean FA;
     boolean FD;
@@ -38,29 +40,30 @@ public class ButtonManager{
         grip = robot.getLaunchpadWrapper().launchpad;
 
         // grip buttons. bl = ball load. ht= hatch. h = high. m = medium. l = low
-        blh = grip.getRawButton(14);
-        blm = grip.getRawButton(1);
-        bll = grip.getRawButton(2);
-        hth = grip.getRawButton(3);
-        htm = grip.getRawButton(4);
-        htl = grip.getRawButton(5);
+        blh = grip.getRawButton(1);
+        blm = grip.getRawButton(2);
+        bll = grip.getRawButton(3);
+        hth = grip.getRawButton(4);
+        htm = grip.getRawButton(5);
+        htl = grip.getRawButton(6);
 
         // gripper joystick. gtf = gripper tilt forward. gtb = gripper tilt back. bd = boom down. bu = boom up.  
-        gtf = grip.getRawButton(6);
-        gtb = grip.getRawButton(7);
-        bd = grip.getRawButton(8); 
-        bu = grip.getRawButton(9); 
+        gtf = grip.getRawButton(7);
+        gtb = grip.getRawButton(8);
+        bd = grip.getRawButton(9); 
+        bu = grip.getRawButton(10); 
 
         // hatch and ball load Switches. ht = hatch. b = Ball. p = pickup. r = release. 
-        ht = grip.getRawButton(10);  //suction position
-        br = grip.getRawButton(12);
-        bp = grip.getRawButton(13);
+        htp = grip.getRawButton(11);
+        htr = grip.getRawButton(12);  //suction position
+        br = grip.getRawButton(13);
+        bp = grip.getRawButton(14);
 
         // wheel buttons. F = front. B = back. A = acscend. D = descend.
-        FA = wheels.getRawButton(4);
-        FD = wheels.getRawButton(1);
-        BA = wheels.getRawButton(2);
-        BD = wheels.getRawButton(3);
+        FA = wheels.getRawButton(1);
+        FD = wheels.getRawButton(2);
+        BA = wheels.getRawButton(3);
+        BD = wheels.getRawButton(4);
         
     }
     /**
