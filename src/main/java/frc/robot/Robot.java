@@ -96,8 +96,8 @@ public class Robot extends TimedRobot {
     encoderBR.setDistancePerPulse((double) 1/1024 * 18.850);
 
     // create the ultrasonic sensors
-    leftUS = new UltrasonicSensor(3);
-    rightUS= new UltrasonicSensor(2);
+    leftUS = new UltrasonicSensor(2);
+    rightUS= new UltrasonicSensor(3);
 
     //create the drive, PDP, Gyro
     drive = new MecanumDrive(FL, BL, FR, BR); // stating the drive type for the bot

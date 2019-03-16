@@ -5,7 +5,6 @@ import java.util.List;
 
 import edu.wpi.cscore.CvSink;
 import edu.wpi.first.cameraserver.CameraServer;
-import edu.wpi.first.wpilibj.DriverStation;
 
 import org.opencv.core.*;
 import org.opencv.imgproc.*;
@@ -114,10 +113,14 @@ public class Vision implements Runnable{
 
         robot.specialRotateBot(selectedTarget.angle, 2);            //rotate robot so target will be in the center of camera vision
 
-        robot.moveBotY(selectedTarget.distance*0.75, 0.8);          //drive the bot 75% of the way to the target at 80% speed
+        robot.moveBotX(12, 0.4);                                    //move bot sideways to account for the camera being on the side
+                                                                    //lines up center of bot with target
+
+        robot.moveBotY(selectedTarget.distance*0.75, 0.7);          //drive the bot 75% of the way to the target at 70% speed
+
 
         robot.squareFrame();                                        //square the frame with the wall
-
+        robot.squareFrame();                                        //square the fram again to make sure its ligned up
 
         visionSuccess();
     }

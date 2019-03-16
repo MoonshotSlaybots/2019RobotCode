@@ -3,10 +3,10 @@ package frc.robot;
 import com.ctre.phoenix.motorcontrol.can.WPI_TalonSRX;
 import com.ctre.phoenix.motorcontrol.can.WPI_VictorSPX;
 
-import edu.wpi.first.wpilibj.DriverStation;
-import edu.wpi.first.wpilibj.Spark;
 import edu.wpi.first.wpilibj.SpeedController;
 import edu.wpi.first.wpilibj.SpeedControllerGroup;
+import com.revrobotics.CANSparkMax;
+import com.revrobotics.CANSparkMaxLowLevel;
 
 public class Arm {
     Robot robot;
@@ -36,7 +36,7 @@ public class Arm {
      */
     public Arm(Robot robot, int joint1EncoderPort, int joint2EncoderPort){
         this.robot = robot;
-        joint1Controller = new Spark(2);
+        joint1Controller = new CANSparkMax(7, CANSparkMaxLowLevel.MotorType.kBrushless);
         joint2Controller = new WPI_TalonSRX(8);
         ballIntakeController1 = new WPI_TalonSRX(9);
         ballIntakeController2 = new WPI_VictorSPX(10);
