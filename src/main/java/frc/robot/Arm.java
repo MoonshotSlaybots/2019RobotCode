@@ -42,11 +42,11 @@ public class Arm {
         ballIntakeController2 = new WPI_VictorSPX(10);
         ballIntakeGroup = new SpeedControllerGroup(ballIntakeController1, ballIntakeController2);
 
-        suctionPistion = new Piston(0, 1);
+        //suctionPistion = new Piston(0, 1);
 
         joint1Encoder = new ArmEncoder(joint1EncoderPort);
         joint2Encoder = new ArmEncoder(joint2EncoderPort);
-        joint1Encoder.setStartAngle(25);
+        joint1Encoder.setStartAngle(35);
         joint2Encoder.setStartAngle(350);
 
         armDriver = new ArmDriver(this);
@@ -204,7 +204,7 @@ class ArmDriver implements Runnable{
      */
     private double calcSpeed(double x){
         x = Math.abs(x);
-        return x*0.001+0.2;
+        return (x*0.001+0.2);
     }
 
 }

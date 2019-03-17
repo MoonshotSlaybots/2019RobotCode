@@ -51,7 +51,7 @@ public class Robot extends TimedRobot {
   LaunchpadWrapper launchpadWrapper;
   ButtonManager buttonManager; 
 
-  //Arm arm;
+  Arm arm;
 
 
  //tweaking variables
@@ -74,7 +74,7 @@ public class Robot extends TimedRobot {
     frontLift = new CANSparkMax(5, CANSparkMaxLowLevel.MotorType.kBrushless);
     backLift =  new CANSparkMax(6, CANSparkMaxLowLevel.MotorType.kBrushless);
 
-    //arm = new Arm(this, 0, 1);
+    arm = new Arm(this, 0, 1);
     
     //practice robot speed contollers
     BL= new WPI_TalonSRX(1);
@@ -96,8 +96,8 @@ public class Robot extends TimedRobot {
     encoderBR.setDistancePerPulse((double) 1/1024 * 18.850);
 
     // create the ultrasonic sensors
-    leftUS = new UltrasonicSensor(2);
-    rightUS= new UltrasonicSensor(3);
+    leftUS = new UltrasonicSensor(3);
+    rightUS= new UltrasonicSensor(2);
 
     //create the drive, PDP, Gyro
     drive = new MecanumDrive(FL, BL, FR, BR); // stating the drive type for the bot
@@ -215,17 +215,64 @@ public class Robot extends TimedRobot {
   }
   //------------------------------------------------------------------------------------------------------------------------------------------
   public void testInit() {
+    launchpadWrapper.setLED("red");
+
     gyro.reset();
   }
    
   //------------------------------------------------------------------------------------------------------------------------------------------
   @Override
   public void testPeriodic() {
-    
-    drive.driveCartesian(buttonManager.controller.getX(), buttonManager.controller.getY()*-1, buttonManager.controller.getRawAxis(4));
-
     if(buttonManager.controller.getRawButton(3)){
-      squareFrame();
+      launchpadWrapper.setLED("red");
+      try {
+        Thread.sleep(1000);
+      } catch (InterruptedException e) {
+        e.printStackTrace();
+      }
+      launchpadWrapper.setLED("yellow");
+      try {
+        Thread.sleep(1000);
+      } catch (InterruptedException e) {
+        e.printStackTrace();
+      }
+      launchpadWrapper.setLED("green");
+      try {
+        Thread.sleep(1000);
+      } catch (InterruptedException e) {
+        e.printStackTrace();
+      }
+      launchpadWrapper.setLED("cyan");
+      try {
+        Thread.sleep(1000);
+      } catch (InterruptedException e) {
+        e.printStackTrace();
+      }
+      launchpadWrapper.setLED("blue");
+      try {
+        Thread.sleep(1000);
+      } catch (InterruptedException e) {
+        e.printStackTrace();
+      }launchpadWrapper.setLED("magenta");
+      try {
+        Thread.sleep(1000);
+      } catch (InterruptedException e) {
+        e.printStackTrace();
+      }
+      launchpadWrapper.setLED("white");
+      try {
+        Thread.sleep(1000);
+      } catch (InterruptedException e) {
+        e.printStackTrace();
+      }
+      launchpadWrapper.setLED("teamColor");
+      try {
+        Thread.sleep(1000);
+      } catch (InterruptedException e) {
+        e.printStackTrace();
+      }
+      launchpadWrapper.setLED("off");
+    
     }
     /*if(buttonManager.controller.getRawButton(4)){
       arm.setBallIntake(0.5);
