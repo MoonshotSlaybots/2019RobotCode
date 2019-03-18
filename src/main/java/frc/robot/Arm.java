@@ -21,7 +21,7 @@ public class Arm {
     Piston suctionPistion;
 
     ArmDriver armDriver;
-    ArmIdeler armIdeler;
+    ArmIdler armIdler;
     boolean isArmDriverWorking;
 
     final double TOWER_HEIGHT = 40.0;           //height of the tower from the ground
@@ -52,7 +52,7 @@ public class Arm {
 
         armDriver = new ArmDriver(this);
         isArmDriverWorking = false;
-        armIdeler = new ArmIdeler(this);
+        armIdler = new ArmIdler(this);
     }
     /**
      * set the speed of the motor cotrolling joint 1
@@ -92,7 +92,7 @@ public class Arm {
      * sets the arm in a idle state so it will maintain the current position of both joints 
      */
     public void setArmIdle(){
-        armIdeler.start("both");
+        armIdler.start("both");
     }
 
     /**
@@ -105,7 +105,7 @@ public class Arm {
      */
     public void moveArm(String position){
         if (isArmDriverWorking==false){
-            armIdeler.interrupt();
+            armIdler.interrupt();
             switch (position){
                 case "hatch high":
                     armDriver.start(141, 130);
@@ -193,9 +193,9 @@ class ArmDriver implements Runnable{
             else{
                 joint1Done = true;
                 if(joint2Done){
-                    arm.armIdeler.start("both");
+                    arm.armIdler.start("both");
                 }else{
-                    arm.armIdeler.start("joint1");
+                    arm.armIdler.start("joint1");
                 }
             }
             double d1 = Math.abs(joint1EndAngle - joint1CurrentAngle);
@@ -215,9 +215,9 @@ class ArmDriver implements Runnable{
             else{
                 joint2Done = true;
                 if(joint1Done){
-                    arm.armIdeler.start("both");
+                    arm.armIdler.start("both");
                 }else{
-                    arm.armIdeler.start("joint2");
+                    arm.armIdler.start("joint2");
                 }
             }
 
@@ -248,7 +248,7 @@ class ArmDriver implements Runnable{
 
 }
 
-class ArmIdeler implements Runnable{
+class ArmIdler implements Runnable{
     Thread t;
     Arm arm;
     ArmEncoder joint1Encoder;
@@ -262,7 +262,7 @@ class ArmIdeler implements Runnable{
     double joint1CorrectionSpeed;
     double joint2CorrectionSpeed;
 
-    public ArmIdeler(Arm arm){
+    public ArmIdler(Arm arm){
         this.arm = arm;
         joint1Encoder = arm.joint1Encoder;
         joint2Encoder = arm.joint2Encoder;
@@ -308,7 +308,7 @@ class ArmIdeler implements Runnable{
         joint2Start = joint2Encoder.getAngle();
 
         while (true){
-            if(Thread.interrupted()){       //call armIdeler.interrupt; to set the interrupt flag and enter this if statment
+            if(Thread.interrupted()){       //call armIdler.interrupt; to set the interrupt flag and enter this if statment
                 System.out.println("arm idle interrupted");
                 stopIdle();
                 return;
