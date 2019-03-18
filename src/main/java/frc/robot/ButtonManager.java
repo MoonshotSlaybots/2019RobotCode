@@ -25,7 +25,6 @@ public class ButtonManager{
     boolean htp;
     boolean htr;
     boolean br;
-    boolean ht;
     boolean bp;
     boolean FA;
     boolean FD;
@@ -85,7 +84,8 @@ public class ButtonManager{
         bu = grip.getRawButton(9); 
 
         // hatch and ball load Switches. ht = hatch. b = Ball. p = pickup. r = release. 
-        ht = grip.getRawButton(10);
+        htp = grip.getRawButton(10);
+        htr = grip.getRawButton(11);
         br = grip.getRawButton(12);
         bp = grip.getRawButton(13);
         
@@ -136,10 +136,6 @@ public class ButtonManager{
         return this.bu;
     }
 
-    public boolean isht() {
-        return this.ht;
-    }
-
     public boolean isBr() {
         return this.br;
     }
@@ -162,5 +158,13 @@ public class ButtonManager{
 
     public boolean isBD() {
         return this.BD;
+    }
+
+    public boolean ishtp(){
+        return this.htp;
+    }
+
+    public boolean ishtr(){
+        return this.htr;
     }
 }

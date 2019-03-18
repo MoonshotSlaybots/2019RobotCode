@@ -59,7 +59,7 @@ public class Robot extends TimedRobot {
   double distanceTolerance = 10;        //prevents rocking back and forth
   double armJoint1Tolerance = 10;
   double armJoint2Tolerance = 10;
-  // stabilizes straight line movement. larger numbers corrects deviation
+  // stabilizes straight line movement. larger numbers corrects deviation faster
   double driveXRotation = 0.05;   
   double driveYRotation = 0.05;
 
@@ -154,16 +154,29 @@ public class Robot extends TimedRobot {
 
     drive.driveCartesian(buttonManager.controller.getX(), buttonManager.controller.getY()*-1, buttonManager.controller.getRawAxis(4));
 
+    //manual arm movement
+    if(buttonManager.isBu()){           //boom up
+      arm.joint1Controller.set(0.75);
+    }else if(buttonManager.isBd()){     //boom down
+      arm.joint2Controller.set(-0.5);
+    }
+
+    if(buttonManager.isGtf()){          //gripper tilt forward
+      arm.joint2Controller.set(1);
+    }else 
+
     if(buttonManager.controller.getRawButton(3)){         //red button on controller
         rotateBot(180);                    
       }
 
-    //front assenced
-    if(buttonManager.isFA()){
+    //front and back assenced
+    if(buttonManager.isFA()|| buttonManager.isBA()){
       frontLift.set(1);
+      backLift.set(1);
     }
     else{
       frontLift.set(0);
+      backLift.set(0);
     }
 
     //front descend 
@@ -171,13 +184,6 @@ public class Robot extends TimedRobot {
       frontLift.set(-1);
     }else{
       frontLift.set(0);
-    }
-
-    //back assenced 
-    if(buttonManager.isBA()){
-      backLift.set(1);
-    }else{
-      backLift.set(0);
     }
 
     //back descend
@@ -188,30 +194,41 @@ public class Robot extends TimedRobot {
     }
 
 
-    //suction (switch)
-    /*if(buttonManager.isht()){
+    //hatch control (switch)
+    if(buttonManager.ishtp()){            //hatch pickup
       arm.setSuction(true);
-    }else{
+    }else if (buttonManager.ishtr()){     //hatch release
       arm.setSuction(false);
     }
-*/
-    //ball intake (pickup)
-  /*  if(buttonManager.isBp()){
+
+    //ball pickup
+    if(buttonManager.isBp()){   
       arm.setBallIntake(1);
     }else{
       arm.setBallIntake(0);
     }
-*/
-    //ball outtake (release)
-   /* if(buttonManager.isBr()){
+
+    //ball release
+    if(buttonManager.isBr()){
       arm.setBallIntake(-1);
     }else{
       arm.setBallIntake(0);
     }
-*/
 
-    System.out.println("left u.s.= "+leftUS.getDistance());
-    System.out.println("right u.s.= "+rightUS.getDistance());
+    //set arm positions
+    if(buttonManager.isBlh()){
+      arm.moveArm("ball high");
+    }else if(buttonManager.isBlm()){
+      arm.moveArm("ball medium");
+    }else if(buttonManager.isBll()){
+      arm.moveArm("ball low");
+    }else if(buttonManager.isHth()){
+      arm.moveArm("hatch high");
+    }else if (buttonManager.isHtm()){
+      arm.moveArm("hatch medium");
+    }else if (buttonManager.isHtl()){
+      arm.moveArm("hatch low");
+    }
   }
   //------------------------------------------------------------------------------------------------------------------------------------------
   public void testInit() {
