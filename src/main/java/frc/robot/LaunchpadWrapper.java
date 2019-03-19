@@ -21,6 +21,8 @@ public class LaunchpadWrapper {
 
     String teamColor=null;
     String previosColor=null;
+    BlinkLED blinkLED;                    //object to controll flashing of the lights
+
 
     /**
      * Creates a joystick to reference the launchpad and sets the team color automatically.
@@ -28,6 +30,7 @@ public class LaunchpadWrapper {
      */
     public LaunchpadWrapper(final int port){           //constructor for the launchpad, creates a joystick on USB port provided 
         launchpad = new Joystick(port);
+        blinkLED = new BlinkLED(this);                  //create a new object to run on a different thread
         setTeamColor();
     }
     /**
@@ -146,15 +149,14 @@ public class LaunchpadWrapper {
         whiteState=white;
     }
     /**
-     * Blink the current color of the LED strip. WARNING: Do not call this method in quick succession,
-     * multiple threads will be made, causing the robot to CRASH.
+     * Blink provided color then sets the leds back to what color it was before.
      * @param delay  The delay between turning the led on or off in miliseconds.
      * @param cycles The number of times the light cycles, once turns the lights off then on.
+     * @param color A string containing the desired color, options are "red", "yellow", "green", "cyan", 
+     * "blue", "magenta", "white", and "teamColor"
      */                                                                
-    public void blinkLED(int delay, int cycles){                            //blink the current color
-        BlinkLED blinkLED = new BlinkLED(this, delay, cycles);              //create a new object to run this on a different thread
-        Thread thread = new Thread(blinkLED);                               //create the new thread
-        thread.start();                                                     //start the thread (will call the run() method)
+    public void blinkLED(int delay, int cycles,String color){                            //blink the provided color on a new thread
+        blinkLED.start(delay, cycles, color);
     }
                                                                     //this is in a new thread so it does not tie down the system
                                                                     //by using the thread.sleep() method which stops the code for a certain tim
@@ -162,33 +164,91 @@ public class LaunchpadWrapper {
      * Blink the lights magenta to indicate an error has occured. (red would conflict with the team color)
      */
     public void errorBlink(){
-        boolean red = redState;
-        boolean green = greenState;
-        boolean blue = blueState;
-        boolean white =  whiteState;
-
-        setLED("magenta");
-        blinkLED(50, 10);
-        setLED(red, green, blue, white);
+        blinkLED(200, 5,"magenta");
     }
 }
-
+//------------------------------------------------------------------------------------------------------------------------------------------
 class BlinkLED implements Runnable{             //a class to handle blinking the LEDs
     LaunchpadWrapper launchpadWrapper;
     int delay;                                  //the delay between state changes
     int cycles;                                 //the number of cycles 
+    Thread t;                                   //the thread that is controlling the blinking
+
+    //colors of the LEDs before blinking starts
+    boolean oldRedState=false;
+    boolean oldGreenState=false;
+    boolean oldBlueState=false;
+    boolean oldWhiteState=false;
+
+    //color of LEDs to blink
+    boolean newRedState=false;
+    boolean newGreenState=false;
+    boolean newBlueState=false;
+    boolean newWhiteState=false;
+    
     /**
      * Constructor to blink the LEDs.
      * @param launchpad The launchpad to control.
      * @param delay     The delay between turning the led on or off in miliseconds.
      * @param cycles    The number of times the light cycles, once turns the lights off then on.
      */
-    public BlinkLED(LaunchpadWrapper launchpad,int delay,int cycles){         //constructor for this object
+    public BlinkLED(LaunchpadWrapper launchpad){         //constructor for this object
         this.launchpadWrapper = launchpad;
-        this.delay = delay;
-        this.cycles = cycles;
     }
 
+
+    public void start(int delay,int cycles, String color){          //call this method to start the blinking process
+        if(t==null){
+            this.delay = delay;
+            this.cycles = cycles;
+
+            //sets the old colors
+            oldRedState=launchpadWrapper.redState;
+            oldGreenState=launchpadWrapper.greenState;
+            oldBlueState=launchpadWrapper.blueState;
+            oldWhiteState=launchpadWrapper.whiteState;
+
+            //sets the new colors
+            switch (color){
+                case "red":                                     //if color = "red", set the new state boolean
+                    newRedState=true;
+                    break;
+                case "yellow":
+                    newRedState=true;
+                    newGreenState=true;
+                    break;
+                case "green":
+                    newGreenState=true;
+                    break;
+                case "cyan":
+                    newGreenState=true;
+                    newBlueState=true;
+                    break;
+                case "blue":
+                    newBlueState=true;
+                    break;
+                case "magenta":
+                    newRedState=true;
+                    newBlueState=true;
+                    break;
+                case "white":
+                    newWhiteState=true;
+                    break;
+                case "teamColor":
+                    if(launchpadWrapper.getTeamColor()=="red"){
+                        newRedState=true;
+                    }else{
+                        newBlueState=true;
+                    }
+                    break;
+                default:                                                        //if the input is not defined, throw an error
+                    DriverStation.reportError("Launchpad: LED color not defined", true);       
+                    break;
+            }
+            t= new Thread(this);
+            t.start();
+        }
+    }
     /**
      * starts the blinking process.
      * This is ran when the .start() method is called on the thread.
@@ -199,28 +259,36 @@ class BlinkLED implements Runnable{             //a class to handle blinking the
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
+        exit();
     }
     /**
      * The method that blinks the LEDs with a <code> for </code> loop.
      * @throws InterruptedException
      */
     private void blink() throws InterruptedException{       
-        boolean red = launchpadWrapper.redState;            //gets the current state of the launchpad LEDs
-        boolean green = launchpadWrapper.greenState;
-        boolean blue = launchpadWrapper.blueState;
-        boolean white = launchpadWrapper.whiteState;
-
         for(int i=0;i<cycles;i++){
             launchpadWrapper.setLED("off");                     //turns LEDs off
 
             Thread.sleep(delay);                                //waits 
 
-            launchpadWrapper.setLED(red,green,blue,white);      //turn LEDs on to what they used to be
+            launchpadWrapper.setLED(newRedState,newGreenState,newBlueState,newWhiteState);      //turn LEDs on
     
             Thread.sleep(delay);                                //wait then loop "cycles" number of times
         }
     }
+    private void exit(){
+        launchpadWrapper.setLED(oldRedState, oldGreenState, oldBlueState, oldWhiteState);           //set LEDs back to their original state
 
+        oldRedState=false;
+        oldGreenState=false;
+        oldBlueState=false;
+        oldWhiteState=false;
+        
+        newRedState=false;
+        newGreenState=false;
+        newBlueState=false;
+        newWhiteState=false;
 
-    
+        t=null;
+    }
 }

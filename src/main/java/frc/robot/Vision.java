@@ -105,10 +105,8 @@ public class Vision implements Runnable{
             selectedTarget = targetList.get(0);
         }
 
-        launchpad.setLED("green");          //blink green to show that a target has been found
-        launchpad.blinkLED(100, 5);
-        launchpad.setLED("yellow");         //solid yellow to show robot is moving
-
+        //blink green to show that a target has been found
+        launchpad.blinkLED(100, 5,"green");
 
 
         robot.specialRotateBot(selectedTarget.angle, 2);            //rotate robot so target will be in the center of camera vision
@@ -137,9 +135,8 @@ public class Vision implements Runnable{
     private void visionSuccess(){
        
         isVisionWorking = false;
-        launchpad.setLED("green");        
-        launchpad.blinkLED(50, 10);
         launchpad.setLED("teamColor");
+        launchpad.blinkLED(50, 10,"green");
         endVision();
     }
 
