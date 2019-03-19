@@ -432,7 +432,7 @@ public class Robot extends TimedRobot {
 
     double startingAngle = gyro.getAngle();
 
-    if(leftSensorDist >24 || rightSensorDist >24 || Math.abs(rightSensorDist-leftSensorDist) >15) {         //if either reads more than 2 feet, or if the difference is more than 15 in, abort 
+    if(leftSensorDist >12*4 || rightSensorDist >12*4 || Math.abs(rightSensorDist-leftSensorDist) >15) {         //if either reads more than 4 feet, or if the difference is more than 15 in, abort 
       fancyErrorReport("squaring failed", false);
       return;
     }
