@@ -52,7 +52,8 @@ public class Robot extends TimedRobot {
   ButtonManager buttonManager; 
 
   Arm arm;
-
+  boolean boomMoving;    //boolean used to tell if boom and gripper is moving
+  boolean gripperMoving;
 
  //tweaking variables
   double rotationTolerance = 0.1;       //for auto rotation, stops plus or minus this angle,                                      
@@ -75,7 +76,9 @@ public class Robot extends TimedRobot {
     backLift =  new CANSparkMax(6, CANSparkMaxLowLevel.MotorType.kBrushless);
 
     arm = new Arm(this, 0, 1);
-    
+    boomMoving = false;
+    gripperMoving = false;
+
     //practice robot speed contollers
     BL= new WPI_TalonSRX(1);
     BR= new WPI_TalonSRX(2);
@@ -156,14 +159,32 @@ public class Robot extends TimedRobot {
 
     //manual arm movement
     if(buttonManager.isBu()){           //boom up
+      boomMoving = true;            
+      arm.armIdler.interrupt();
       arm.joint1Controller.set(0.75);
+
     }else if(buttonManager.isBd()){     //boom down
+      boomMoving = true;
+      arm.armIdler.interrupt();
       arm.joint2Controller.set(-0.5);
+
+    }else if (boomMoving){
+      arm.armIdler.start("both");
+      boomMoving=false;
     }
 
     if(buttonManager.isGtf()){          //gripper tilt forward
+      gripperMoving = true;
+      arm.armIdler.interrupt();
       arm.joint2Controller.set(1);
-    }else 
+    }else if(buttonManager.isGtb()){    //gripper tilt back
+      gripperMoving = true;
+      arm.armIdler.interrupt();
+      arm.joint2Controller.set(-1);
+    }else if(gripperMoving){
+      arm.armIdler.start("both");
+      gripperMoving = false;
+    } 
 
     if(buttonManager.controller.getRawButton(3)){         //red button on controller
         rotateBot(180);                    

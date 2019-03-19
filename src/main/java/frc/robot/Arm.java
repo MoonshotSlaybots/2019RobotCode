@@ -55,15 +55,16 @@ public class Arm {
         armIdler = new ArmIdler(this);
     }
     /**
-     * set the speed of the motor cotrolling joint 1
+     * set the speed of the motor cotrolling joint 1.
      * @param speed a double from -1 to 1 
      */
     public void setJoint1Controller(double speed){
+
         joint1Controller.set(speed);
     }
 
     /**
-     * set the speed of the motor cotrolling joint 2
+     * set the speed of the motor cotrolling joint 2.
      * @param speed a double from -1 to 1 
      */
     public void setJoint2Controller(double speed){
@@ -133,6 +134,8 @@ public class Arm {
    
 
 }
+//------------------------------------------------------------------------------------------------------------------------------------------
+
 /**
  * Controlls automatic movement of the arm.
  */
@@ -174,21 +177,20 @@ class ArmDriver implements Runnable{
         int vt1 = 0; //counting variale for velocity calculations for joint 1 and joint2
         int vt2 = 0; 
 
+        double startingDelta1=Math.abs(joint1EndAngle-arm.joint1Encoder.getAngle());
+        double startingDelta2=Math.abs(joint2EndAngle-arm.joint2Encoder.getAngle());
+
+
         while(true){
             double joint1CurrentAngle = arm.joint1Encoder.getAngle();
             double joint2CurrentAngle = arm.joint2Encoder.getAngle();
 
-            double d0=joint1EndAngle-joint1CurrentAngle;
-
             //Joint 1 control
-            boolean positiveVolcity;       //the sign of the volicity
             if(joint1CurrentAngle<joint1EndAngle-armJoint1Tolerance){
-                positiveVolcity = true;
-                arm.joint1Controller.set(calcSpeed(vt1,positiveVolcity));
+                arm.joint1Controller.set(calcSpeed(vt1,true));
             }
             else if(joint1CurrentAngle>joint1EndAngle+armJoint1Tolerance){
-                positiveVolcity = false;
-                arm.joint1Controller.set(calcSpeed(vt1,positiveVolcity));
+                arm.joint1Controller.set(calcSpeed(vt1,false));
             }
             else{
                 joint1Done = true;
@@ -198,8 +200,9 @@ class ArmDriver implements Runnable{
                     arm.armIdler.start("joint1");
                 }
             }
-            double d1 = Math.abs(joint1EndAngle - joint1CurrentAngle);
-            if(d1>=Math.abs(d0)/2){
+
+            double currentDelta1 = Math.abs(joint1EndAngle - joint1CurrentAngle);
+            if(currentDelta1 >= startingDelta1 / 2){                            //if motor has reached half way point, move back down the curve
                 vt1++;
             }else{
                 vt1--;
@@ -207,10 +210,10 @@ class ArmDriver implements Runnable{
 
             //Joint 2 control
             if(joint2CurrentAngle<joint2EndAngle-armJoint2Tolerance){
-                arm.joint2Controller.set(calcSpeed(joint2EndAngle-joint2CurrentAngle));
+                arm.joint2Controller.set(calcSpeed(vt2,true));
             }
             else if(joint2CurrentAngle>joint2EndAngle+armJoint2Tolerance){
-                arm.joint2Controller.set(calcSpeed(joint2EndAngle-joint2CurrentAngle));
+                arm.joint2Controller.set(calcSpeed(vt2,false));
             }
             else{
                 joint2Done = true;
@@ -221,6 +224,13 @@ class ArmDriver implements Runnable{
                 }
             }
 
+            double currentDelta2 = Math.abs(joint2EndAngle - joint2CurrentAngle);
+            if(currentDelta2 >= startingDelta2 / 2){
+                vt2++;
+            }else{
+                vt2--;
+            }
+
             if(joint1Done && joint2Done){
                 break;
             }
@@ -229,45 +239,55 @@ class ArmDriver implements Runnable{
         arm.isArmDriverWorking=false;
     }
     /**
-     * calculate the speed to rotate the arm based on the degrees left to rotate
-     * @param x the degrees remaining (can be negative or positive)
+     * Calculate the speed to rotate based on a counting variable vt.
+     * Increment vt to get new speed values. This allows for custom speed curves.
+     * Once halfway has been reached, decrement vt.
+     * @param vt The counting variable, equals the x value of the given curve.
+     * @param positive A boolean, true if the speed value should be positive.
      * @return the speed to move (range from 0 to 1)
      */
-    private double calcSpeed(double x,boolean positive){
-        //parameters to tweak velociy curve: delay is c, steepness is k, a is max speed
+    private double calcSpeed(int vt,boolean positive){
+        //parameters to tweak velociy curve: delay is c, steepness is k, max speed is a
+        //desmos graph: https://www.desmos.com/calculator/kppwi6pzt1
+
         int c = 5;
         double k = 0.001;
         double a = 1;
 
         if(positive){
-            return (((Math.atan(k*x-c)*2/Math.PI)+1)*(a/2));
+            return (((Math.atan(k*vt-c)*2/Math.PI)+1)*(a/2));
         }else{
-            return (-((Math.atan(k*x-c)*2/Math.PI)+1)*(a/2));
+            return (-((Math.atan(k*vt-c)*2/Math.PI)+1)*(a/2));
         }
     }
 
 }
-
+//------------------------------------------------------------------------------------------------------------------------------------------
+/**
+ * Holds the arm on the current position by polling the rotery encoders and moving the motors to correct any drift.
+ */
 class ArmIdler implements Runnable{
     Thread t;
     Arm arm;
     ArmEncoder joint1Encoder;
     ArmEncoder joint2Encoder;
 
-    double joint1Start;
+    double joint1Start;             
     double joint2Start;
 
     String selection;
 
     double joint1CorrectionSpeed;
     double joint2CorrectionSpeed;
-
+    /**
+     *  Holds the arm on the current position by polling the rotery encoders and moving the motors to correct any drift.
+     */
     public ArmIdler(Arm arm){
         this.arm = arm;
         joint1Encoder = arm.joint1Encoder;
         joint2Encoder = arm.joint2Encoder;
 
-        joint1CorrectionSpeed = 0.05;
+        joint1CorrectionSpeed = 0.05;               //correction speed of the motors, the higher the speed, the more likely osscilation will be.
         joint2CorrectionSpeed = 0.05;
     }
 
@@ -285,11 +305,7 @@ class ArmIdler implements Runnable{
         }else{                                          //if called when idler is already running, interrupt it and create the new idler
             Thread currentThread = t;
             interrupt();                                //calls the interrupt method to begin stopping the current thread
-            try{
-                currentThread.join();                   //waits for the current thread to stop 
-            }catch (Exception e){
-            }
-            start(selection);                           //start a new thread
+            start(selection);                           //starts a new thread
         }
     }
 
@@ -298,7 +314,12 @@ class ArmIdler implements Runnable{
      */
     public void interrupt(){
         if(t!=null){
-            t.interrupt();
+            t.interrupt();                  //set the interruption flag that is tested for in the run method.
+            try {
+                t.join();                   //wait for the thread "t" to finish execution
+            } catch (Exception e) {
+             }
+            t = null;                       //set t to null for future threads.
         }
     }
 
@@ -310,7 +331,6 @@ class ArmIdler implements Runnable{
         while (true){
             if(Thread.interrupted()){       //call armIdler.interrupt; to set the interrupt flag and enter this if statment
                 System.out.println("arm idle interrupted");
-                stopIdle();
                 return;
             }
             switch (selection){
@@ -338,8 +358,5 @@ class ArmIdler implements Runnable{
         arm.joint2Controller.set(-(joint2Encoder.getAngle()-joint2Start)*joint2CorrectionSpeed);
     }
 
-    private void stopIdle(){
-        t=null;
-    }
 
 }
