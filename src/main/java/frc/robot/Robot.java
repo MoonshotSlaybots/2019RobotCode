@@ -64,6 +64,10 @@ public class Robot extends TimedRobot {
   double driveXRotation = 0.05;   
   double driveYRotation = 0.05;
 
+  //loop control variables, forces some methods to only run once while a button is pressed
+  int boomStopCounter = 0;
+  int gripperStopCounter = 0;
+
   //------------------------------------------------------------------------------------------------------------------------------------------
   @Override
   public void robotInit() {
@@ -126,13 +130,33 @@ public class Robot extends TimedRobot {
     UsbCamera driveCam = CameraServer.getInstance().startAutomaticCapture("driveCam",1);          //set camera settings
     driveCam.setResolution(320, 240);
     driveCam.setFPS(20);
+
+
+    
   }
 
   //------------------------------------------------------------------------------------------------------------------------------------------
-  @Override
-  public void robotPeriodic() {
-  }
+  public void disabledInit() {
 
+    //interrupt all multithreaded taskes
+    arm.armDriver.interrupt();
+    arm.armIdler.interrupt();
+    vision.interrupt();
+
+    //set all enable variables to false to stop any other automatic methods
+    enableRotate=false;
+    enableSpecialRotate=false;
+    enableSquareFrame=false;
+    enableMoveBotY=false;
+    enableMoveBotX=false;
+    
+
+  }
+  //------------------------------------------------------------------------------------------------------------------------------------------
+  public void disabledPeriodic() {
+
+
+  }
   //------------------------------------------------------------------------------------------------------------------------------------------
   @Override
   public void autonomousInit() {
@@ -148,6 +172,16 @@ public class Robot extends TimedRobot {
   @Override
   public void teleopInit() {
     gyro.reset();             //calibrate the gyro, the current bot angle is now 0 degrees
+
+    arm.armIdler.start("none");
+
+    
+    boomMoving=false;
+    gripperMoving=false;
+
+
+    boomStopCounter =0;
+    gripperStopCounter=0;
   }
 
   //------------------------------------------------------------------------------------------------------------------------------------------
@@ -157,33 +191,47 @@ public class Robot extends TimedRobot {
 
     drive.driveCartesian(buttonManager.controller.getX(), buttonManager.controller.getY()*-1, buttonManager.controller.getRawAxis(4));
 
+
     //manual arm movement
     if(buttonManager.isBu()){           //boom up
-      boomMoving = true;            
-      arm.armIdler.interrupt();
-      arm.joint1Controller.set(0.75);
+      if(!boomMoving){arm.armIdler.setJoint1(false);}         //if boom was not moving before this loop  
+      boomMoving = true;
+      boomStopCounter=0;    
+      arm.joint1Controller.set(0.5);
 
     }else if(buttonManager.isBd()){     //boom down
+      if(!boomMoving){arm.armIdler.setJoint1(false);}         //if boom was not moving before this loop
       boomMoving = true;
-      arm.armIdler.interrupt();
+      boomStopCounter =0;
       arm.joint2Controller.set(-0.5);
 
-    }else if (boomMoving){
-      arm.armIdler.start("both");
-      boomMoving=false;
+    }else if (boomMoving){              //if no buttons are pressed, and boomMoving is true
+      if(boomStopCounter>=50){          //if looped 20 times since last button press
+        arm.armIdler.setJoint1(true);
+        boomMoving=false;
+        boomStopCounter=0;
+      }else{boomStopCounter++;}
     }
 
+    //manual gripper movement
     if(buttonManager.isGtf()){          //gripper tilt forward
+      if(!gripperMoving){arm.armIdler.setJoint2(false);}        //if gripper was not moving before this loop
       gripperMoving = true;
-      arm.armIdler.interrupt();
-      arm.joint2Controller.set(1);
+      gripperStopCounter = 0;
+      arm.joint2Controller.set(0.5);
+
     }else if(buttonManager.isGtb()){    //gripper tilt back
+      if(!gripperMoving){arm.armIdler.setJoint2(false);}        //if gripper was not moving before this loop
       gripperMoving = true;
-      arm.armIdler.interrupt();
-      arm.joint2Controller.set(-1);
+      gripperStopCounter=0;
+      arm.joint2Controller.set(-0.5);
+
     }else if(gripperMoving){
-      arm.armIdler.start("both");
-      gripperMoving = false;
+      if(gripperStopCounter>=50){
+        arm.armIdler.setJoint2(true);;
+        gripperMoving = false;
+        gripperStopCounter=0;
+      }else{gripperStopCounter++;}
     } 
 
     if(buttonManager.controller.getRawButton(3)){         //red button on controller
@@ -330,7 +378,6 @@ public class Robot extends TimedRobot {
     
 
    }
-
   //------------------------------------------------------------------------------------------------------------------------------------------
   /**
    * For automatic rotations.
@@ -352,18 +399,22 @@ public class Robot extends TimedRobot {
   }
 
   //------------------------------------------------------------------------------------------------------------------------------------------
+  
+  boolean enableRotate;
+
   /**
    * Rotate the robot a certain degree measure relative to the starting position.
    * A positive rotation is clockwise.
    * @param angle The angle measure to rotate as a double.
    */
   public void rotateBot(double angle){                        //rotate the robot a certain angle 
+    enableRotate = true;
     double startAngle = gyro.getAngle();                      //get the absolute starting angle of the robot
     System.out.println("start angle: " +startAngle );
     double currentAngle = gyro.getAngle();                    //the current angle of the robot, this will be updated constantly
     double endAngle = startAngle + angle;                     //calculate the absolute end angle 
 
-    while(true){                                              //loop this until the return keyword is hit
+    while(enableRotate){                                       //loop this until the return keyword is hit or enable rotate is false
       currentAngle = gyro.getAngle();                         //update the robots current angle
       double rotDist = Math.abs(currentAngle-endAngle);         //find the distance yet to rotate
       double rotSpeed = calcRotSpeed(rotDist);                  //calculate the rotation speed
@@ -383,6 +434,9 @@ public class Robot extends TimedRobot {
     }
   }
   //------------------------------------------------------------------------------------------------------------------------------------------
+ 
+  boolean enableSpecialRotate;
+
   /**
    * Rotate the robot aound a point on the outer frame a certain degree measure relative to the starting position.
    * A positive rotation is clockwise.
@@ -390,6 +444,7 @@ public class Robot extends TimedRobot {
    * @param rotationPoint An int that selects which point to rotate around, 1=front left, 2=front middle, 3=front left.
    */
   public void specialRotateBot(double angle,int rotationPoint){                        //rotate the robot a certain angle 
+    enableSpecialRotate = true;
     double startAngle = gyro.getAngle();                      //get the absolute starting angle of the robot
     double currentAngle = gyro.getAngle();                    //the current angle of the robot, this will be updated constantly
     double endAngle = startAngle + angle;                     //calculate the absolute end angle 
@@ -400,7 +455,7 @@ public class Robot extends TimedRobot {
       case 1: 
         break;
       case 2:       //front middle
-        while(true){                                              //loop this until the return keyword is hit
+        while(enableSpecialRotate){                               //loop this until the return keyword is hit, or the enable special rotate is false
           currentAngle = gyro.getAngle();                         //update the robots current angle
           rotDist = Math.abs(currentAngle-endAngle);
           rotSpeed = calcRotSpeed(rotDist);
@@ -419,11 +474,15 @@ public class Robot extends TimedRobot {
     }
   }
   //------------------------------------------------------------------------------------------------------------------------------------------
+  
+  boolean enableSquareFrame;
+  
   /**
    * using the ultrasonic sensors, squares the frame of the robot up with the wall 
    * that it is currently facing. 
    */
   public void squareFrame(){
+    enableSquareFrame=true;
     int rotationSteps = 5;                                      //the number of degrees to rotate the bot each time
     int squareTolerance = 1;                                    //tolerance in inches, robot will stop plus or minus this much
 
@@ -437,7 +496,7 @@ public class Robot extends TimedRobot {
       return;
     }
 
-    while(true){
+    while(enableSquareFrame){
       leftSensorDist = leftUS.getDistance();
       rightSensorDist = rightUS.getDistance();
 
@@ -456,20 +515,24 @@ public class Robot extends TimedRobot {
 
   }
   //------------------------------------------------------------------------------------------------------------------------------------------
+ 
+  boolean enableMoveBotY;
+ 
   /**
    * Move the robot in the Y axis, forward or backwards. 
    * @param distance The distance to travel, this should always be positive.
    * @param speed    The speed at which the robot will move from -1 to 1. Positive is forward, negative is backwards.
    */
   public void moveBotY(double distance, double speed){
+    enableMoveBotY=true;
     gyro.reset();
     double startDist = encoderFR.getDistance();
     double endDist = startDist + distance;
     double currentDist = encoderFR.getDistance();
     speed = Math.abs(speed);
 
-    while(true){  
-      currentDist=encoderFR.getDistance();                                             //loop this until the return keyword is hit
+    while(enableMoveBotY){  
+      currentDist=encoderFR.getDistance();                     //loop this until the return keyword is hit or enable move bot y is false
       double angle = gyro.getAngle();
       if(currentDist<endDist-distanceTolerance){               //if current distance is less than end distance, it will continue to move
         drive.driveCartesian(0, speed, -angle*driveYRotation);
@@ -484,14 +547,23 @@ public class Robot extends TimedRobot {
     }
   }
   //------------------------------------------------------------------------------------------------------------------------------------------
+  
+  boolean enableMoveBotX;
+  
+  /**
+   * Move the robot in the X axis, left or right. 
+   * @param distance The distance to travel, this should always be positive.
+   * @param speed    The speed at which the robot will move from -1 to 1. Positive is right, negative is left.
+   */
   public void moveBotX(double distance, double speed){
+    enableMoveBotX=true;
     gyro.reset();
     double startDist = encoderFR.getDistance();
     double endDist = startDist + distance;
     double currentDist = encoderFR.getDistance();
   
     speed = Math.abs(speed);
-    while(true){     
+    while(enableMoveBotX){     
       currentDist=encoderFR.getDistance();
       double angle = gyro.getAngle();                                          //loop this until the return keyword is hit
       if(currentDist<endDist-distanceTolerance){               //if current distance is less than end distance, it will continue to move

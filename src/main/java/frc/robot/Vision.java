@@ -60,6 +60,17 @@ public class Vision implements Runnable{
         }
     }
 
+    public void interrupt(){
+        if (t != null) {
+            t.interrupt();                  // set the interruption flag that is tested for in the run method.
+            try {
+                t.join();                   // wait for the thread "t" to finish execution
+            } catch (Exception e) {
+            }
+            visionFailed();
+        }   
+    }
+
     /**
      * The main vision method. The vision thread starts from here.
      */
@@ -105,20 +116,44 @@ public class Vision implements Runnable{
             selectedTarget = targetList.get(0);
         }
 
+        if(Thread.interrupted()){
+            visionFailed();
+            return;
+        }
+
         //blink green to show that a target has been found
         launchpad.blinkLED(100, 5,"green");
 
 
         robot.specialRotateBot(selectedTarget.angle, 2);            //rotate robot so target will be in the center of camera vision
 
+        if(Thread.interrupted()){
+            visionFailed();
+            return;
+        }
+        
         robot.moveBotX(12, 0.4);                                    //move bot sideways to account for the camera being on the side
                                                                     //lines up center of bot with target
 
+        if(Thread.interrupted()){
+            visionFailed();
+            return;
+        }
+
         robot.moveBotY(selectedTarget.distance*0.75, 0.7);          //drive the bot 75% of the way to the target at 70% speed
 
+        if(Thread.interrupted()){
+            visionFailed();
+            return;
+        }
 
         robot.squareFrame();                                        //square the frame with the wall
         robot.squareFrame();                                        //square the fram again to make sure its ligned up
+
+        if(Thread.interrupted()){
+            visionFailed();
+            return;
+        }
 
         visionSuccess();
     }
