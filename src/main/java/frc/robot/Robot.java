@@ -58,8 +58,8 @@ public class Robot extends TimedRobot {
  //tweaking variables
   double rotationTolerance = 0.1;       //for auto rotation, stops plus or minus this angle,                                      
   double distanceTolerance = 10;        //prevents rocking back and forth
-  double armJoint1Tolerance = 10;
-  double armJoint2Tolerance = 10;
+  double armJoint1Tolerance = 0.1;
+  double armJoint2Tolerance = 0.1;
   // stabilizes straight line movement. larger numbers corrects deviation faster
   double driveXRotation = 0.05;   
   double driveYRotation = 0.05;
@@ -254,6 +254,9 @@ public class Robot extends TimedRobot {
   //------------------------------------------------------------------------------------------------------------------------------------------
   public void testInit() {
     launchpadWrapper.setLED("red");
+    
+    arm.resetIdler();
+    //arm.setArmIdle();
 
     gyro.reset();
   }
@@ -261,57 +264,18 @@ public class Robot extends TimedRobot {
   //------------------------------------------------------------------------------------------------------------------------------------------
   @Override
   public void testPeriodic() {
-    if(buttonManager.controller.getRawButton(3)){
-      launchpadWrapper.setLED("red");
-      try {
-        Thread.sleep(1000);
-      } catch (InterruptedException e) {
-        e.printStackTrace();
-      }
-      launchpadWrapper.setLED("yellow");
-      try {
-        Thread.sleep(1000);
-      } catch (InterruptedException e) {
-        e.printStackTrace();
-      }
-      launchpadWrapper.setLED("green");
-      try {
-        Thread.sleep(1000);
-      } catch (InterruptedException e) {
-        e.printStackTrace();
-      }
-      launchpadWrapper.setLED("cyan");
-      try {
-        Thread.sleep(1000);
-      } catch (InterruptedException e) {
-        e.printStackTrace();
-      }
-      launchpadWrapper.setLED("blue");
-      try {
-        Thread.sleep(1000);
-      } catch (InterruptedException e) {
-        e.printStackTrace();
-      }launchpadWrapper.setLED("magenta");
-      try {
-        Thread.sleep(1000);
-      } catch (InterruptedException e) {
-        e.printStackTrace();
-      }
-      launchpadWrapper.setLED("white");
-      try {
-        Thread.sleep(1000);
-      } catch (InterruptedException e) {
-        e.printStackTrace();
-      }
-      launchpadWrapper.setLED("teamColor");
-      try {
-        Thread.sleep(1000);
-      } catch (InterruptedException e) {
-        e.printStackTrace();
-      }
-      launchpadWrapper.setLED("off");
-    
+    buttonManager.updateButtons();
+
+    if (buttonManager.isHtl()){
+      System.out.println("arm set low");
+      arm.moveArm("hatch low");
     }
+
+    if(buttonManager.isHtm()){
+      System.out.println("arm set med");
+      arm.moveArm("hatch medium");
+    }
+    
     /*if(buttonManager.controller.getRawButton(4)){
       arm.setBallIntake(0.5);
     }

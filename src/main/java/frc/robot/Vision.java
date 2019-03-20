@@ -111,7 +111,7 @@ public class Vision implements Runnable{
 
         robot.specialRotateBot(selectedTarget.angle, 2);            //rotate robot so target will be in the center of camera vision
 
-        robot.moveBotX(12, 0.4);                                    //move bot sideways to account for the camera being on the side
+        robot.moveBotX(11, 0.4);                                    //move bot sideways to account for the camera being on the side
                                                                     //lines up center of bot with target
 
         robot.moveBotY(selectedTarget.distance*0.75, 0.7);          //drive the bot 75% of the way to the target at 70% speed

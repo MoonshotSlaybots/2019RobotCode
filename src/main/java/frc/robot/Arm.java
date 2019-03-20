@@ -93,7 +93,14 @@ public class Arm {
      * sets the arm in a idle state so it will maintain the current position of both joints 
      */
     public void setArmIdle(){
-        armIdler.start("both");
+        //should be "both" not joint1
+        armIdler.start("joint1");
+    }
+
+    public void resetIdler(){
+        armIdler.interrupt();
+        joint1Controller.set(0);
+        joint2Controller.set(0);
     }
 
     /**
@@ -162,7 +169,7 @@ class ArmDriver implements Runnable{
     public void start(double joint1EndAngle, double joint2EndAngle){                            //starts the thread and calls the run method
         if(t==null){
             arm.isArmDriverWorking = true;
-            System.out.println("Starting thread");
+            System.out.println("Starting driver thread");
             this.joint1EndAngle = joint1EndAngle;
             this.joint2EndAngle = joint2EndAngle;
             t=new Thread(this);
@@ -179,6 +186,7 @@ class ArmDriver implements Runnable{
 
         double startingDelta1=Math.abs(joint1EndAngle-arm.joint1Encoder.getAngle());
         double startingDelta2=Math.abs(joint2EndAngle-arm.joint2Encoder.getAngle());
+        double currentDelta1;
 
 
         while(true){
@@ -186,7 +194,7 @@ class ArmDriver implements Runnable{
             double joint2CurrentAngle = arm.joint2Encoder.getAngle();
 
             //Joint 1 control
-            if(joint1CurrentAngle<joint1EndAngle-armJoint1Tolerance){
+            if(joint1CurrentAngle<=joint1EndAngle-armJoint1Tolerance){
                 arm.joint1Controller.set(calcSpeed(vt1,true));
             }
             else if(joint1CurrentAngle>joint1EndAngle+armJoint1Tolerance){
@@ -198,16 +206,20 @@ class ArmDriver implements Runnable{
                     arm.armIdler.start("both");
                 }else{
                     arm.armIdler.start("joint1");
+                    break;
                 }
             }
+            currentDelta1 = Math.abs(joint1EndAngle - joint1CurrentAngle);
 
-            double currentDelta1 = Math.abs(joint1EndAngle - joint1CurrentAngle);
-            if(currentDelta1 >= startingDelta1 / 2){                            //if motor has reached half way point, move back down the curve
+            if(currentDelta1 >=(startingDelta1 / 2)){                            //if motor has reached half way point, move back down the curve
                 vt1++;
             }else{
                 vt1--;
             }
-
+            System.out.println("vt1 = " + vt1);
+            System.out.println("currentdelta1 = " + currentDelta1);
+            System.out.println("startingdelta1 = " + startingDelta1);
+            /*
             //Joint 2 control
             if(joint2CurrentAngle<joint2EndAngle-armJoint2Tolerance){
                 arm.joint2Controller.set(calcSpeed(vt2,true));
@@ -230,10 +242,11 @@ class ArmDriver implements Runnable{
             }else{
                 vt2--;
             }
-
-            if(joint1Done && joint2Done){
+            */
+            if(joint1Done){
                 break;
             }
+            
         }
         t=null;
         arm.isArmDriverWorking=false;
@@ -250,8 +263,8 @@ class ArmDriver implements Runnable{
         //parameters to tweak velociy curve: delay is c, steepness is k, max speed is a
         //desmos graph: https://www.desmos.com/calculator/kppwi6pzt1
 
-        int c = 5;
-        double k = 0.001;
+        double c = 3;
+        double k = 0.01;
         double a = 1;
 
         if(positive){
@@ -299,7 +312,7 @@ class ArmIdler implements Runnable{
     public void start(String selection){                            //starts the thread and calls the run method
         if(t==null){
             this.selection=selection;
-            System.out.println("Starting thread");
+            System.out.println("Starting idle thread");
             t=new Thread(this);
             t.start();
         }else{                                          //if called when idler is already running, interrupt it and create the new idler
