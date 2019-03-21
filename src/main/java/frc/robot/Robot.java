@@ -173,7 +173,7 @@ public class Robot extends TimedRobot {
   public void teleopInit() {
     gyro.reset();             //calibrate the gyro, the current bot angle is now 0 degrees
 
-    arm.armIdler.start("none");
+    arm.armIdler.start("joint1");
 
     
     boomMoving=false;
@@ -203,10 +203,11 @@ public class Robot extends TimedRobot {
       if(!boomMoving){arm.armIdler.setJoint1(false);}         //if boom was not moving before this loop
       boomMoving = true;
       boomStopCounter =0;
-      arm.joint2Controller.set(-0.5);
+      arm.joint1Controller.set(-0.5);
 
     }else if (boomMoving){              //if no buttons are pressed, and boomMoving is true
-      if(boomStopCounter>=50){          //if looped 20 times since last button press
+      arm.joint1Controller.set(arm.joint1Controller.get()/2);
+      if(boomStopCounter>=20){          //if looped 20 times since last button press
         arm.armIdler.setJoint1(true);
         boomMoving=false;
         boomStopCounter=0;
@@ -238,7 +239,7 @@ public class Robot extends TimedRobot {
         rotateBot(180);                    
       }
 
-    //front and back assenced
+    //front and back ascend
     if(buttonManager.isFA()|| buttonManager.isBA()){
       frontLift.set(1);
       backLift.set(1);
@@ -302,11 +303,9 @@ public class Robot extends TimedRobot {
   //------------------------------------------------------------------------------------------------------------------------------------------
   public void testInit() {
     launchpadWrapper.setLED("red");
-    
-    arm.resetIdler();
-    //arm.setArmIdle();
+    gyro.reset();             //calibrate the gyro, the current bot angle is now 0 degrees
 
-    gyro.reset();
+    arm.armIdler.start("joint1");
   }
    
   //------------------------------------------------------------------------------------------------------------------------------------------
@@ -322,24 +321,7 @@ public class Robot extends TimedRobot {
     if(buttonManager.isHtm()){
       System.out.println("arm set med");
       arm.moveArm("hatch medium");
-    }
-    
-    /*if(buttonManager.controller.getRawButton(4)){
-      arm.setBallIntake(0.5);
-    }
-    else if(buttonManager.controller.getRawButton(3)){
-      arm.setBallIntake(-0.5);
-    }else{
-      arm.setBallIntake(1);q1
-    }
-
-    arm.setJoint1Controller(buttonManager.controller.getRawAxis(1));
-    arm.setJoint2Controller(buttonManager.controller.getRawAxis(4));
-    */
-
-      //moveBotX(0, 0.8);
-    
-    
+    }    
 
    }
   //------------------------------------------------------------------------------------------------------------------------------------------
@@ -382,8 +364,6 @@ public class Robot extends TimedRobot {
       currentAngle = gyro.getAngle();                         //update the robots current angle
       double rotDist = Math.abs(currentAngle-endAngle);         //find the distance yet to rotate
       double rotSpeed = calcRotSpeed(rotDist);                  //calculate the rotation speed
-        // System.out.println("rotation speed= "+rotSpeed);        
-        // System.out.println("angle= "+ currentAngle);
       if(currentAngle<endAngle-rotationTolerance){            //if robot angle is less than end angle(to the left)   
         drive.driveCartesian(0, 0, rotSpeed);                 //rotate clockwise (positive speed)
       }

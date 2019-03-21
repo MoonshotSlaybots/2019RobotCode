@@ -126,7 +126,10 @@ public class Vision implements Runnable{
 
 
         robot.specialRotateBot(selectedTarget.angle, 2);            //rotate robot so target will be in the center of camera vision
-
+        if(Thread.interrupted()){
+            visionFailed();
+            return;
+        }
         robot.moveBotX(11, 0.4);                                    //move bot sideways to account for the camera being on the side
                                                                     //lines up center of bot with target
 
@@ -143,7 +146,7 @@ public class Vision implements Runnable{
         }
 
         robot.squareFrame();                                        //square the frame with the wall
-        robot.squareFrame();                                        //square the fram again to make sure its ligned up
+        robot.squareFrame();                                        //square the frame again to make sure its ligned up
 
         if(Thread.interrupted()){
             visionFailed();

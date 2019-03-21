@@ -18,11 +18,10 @@ public class Arm {
     SpeedController ballIntakeController2;
     SpeedControllerGroup ballIntakeGroup;
 
-    Piston suctionPistion;
+    Piston suctionPiston;
 
     ArmDriver armDriver;
     ArmIdler armIdler;
-    boolean isArmDriverWorking;
 
     final double TOWER_HEIGHT = 40.0;           //height of the tower from the ground
     final double L1 = 20.0;                     //length of the first arm segment
@@ -43,7 +42,7 @@ public class Arm {
         ballIntakeController2 = new WPI_VictorSPX(10);
         ballIntakeGroup = new SpeedControllerGroup(ballIntakeController1, ballIntakeController2);
 
-        // suctionPistion = new Piston(0, 1);
+        // suctionPiston = new Piston(0, 1);
 
         joint1Encoder = new ArmEncoder(joint1EncoderPort);
         joint2Encoder = new ArmEncoder(joint2EncoderPort);
@@ -51,9 +50,8 @@ public class Arm {
         joint2Encoder.setStartAngle(350);
 
         armDriver = new ArmDriver(this);
-        isArmDriverWorking = false;
         armIdler = new ArmIdler(this);
-        armIdler.start("none");                 //begins the arm idler, but sets its state to none
+        //armIdler.start("none");                 //begins the arm idler, but sets its state to none
     }
 
     /**
@@ -91,9 +89,9 @@ public class Arm {
      */
     public void setSuction(boolean state) {
         if (state) {
-            suctionPistion.extend();
+            suctionPiston.extend();
         } else {
-            suctionPistion.retract();
+            suctionPiston.retract();
         }
     }
     /**
@@ -118,30 +116,28 @@ public class Arm {
      * @param position the string that gives the position the arm should go to
      */
     public void moveArm(String position) {
-        if (isArmDriverWorking == false) {
-            armIdler.interrupt();
-            switch (position) {
-            case "hatch high":
-                armDriver.start(141, 130);
-                break;
-            case "hatch medium":
-                armDriver.start(96, 173);
-                break;
-            case "hatch low":
-                armDriver.start(54, 217);
-                break;
-            case "ball high":
-                armDriver.start(170, 100);
-                break;
-            case "ball medium":
-                armDriver.start(108, 162);
-                break;
-            case "ball low":
-                armDriver.start(68, 202);
-                break;
-            default:
-                robot.fancyErrorReport("ERROR: Arm position not defined", true);
-            }
+        armIdler.setBothJoints(false);
+        switch (position) {
+        case "hatch high":
+            armDriver.start(141, 130);
+            break;
+        case "hatch medium":
+            armDriver.start(96, 173);
+            break;
+        case "hatch low":
+            armDriver.start(54, 217);
+            break;
+        case "ball high":
+            armDriver.start(170, 100);
+            break;
+        case "ball medium":
+            armDriver.start(108, 162);
+            break;
+        case "ball low":
+            armDriver.start(68, 202);
+            break;
+        default:
+            robot.fancyErrorReport("ERROR: Arm position not defined", true);
         }
     }
 
@@ -174,11 +170,10 @@ class ArmDriver implements Runnable {
      */
     public void start(double joint1EndAngle, double joint2EndAngle){                            //starts the thread and calls the run method
         if(t==null){
-            arm.isArmDriverWorking = true;
+            t = new Thread(this);
             System.out.println("Starting driver thread");
             this.joint1EndAngle = joint1EndAngle;
             this.joint2EndAngle = joint2EndAngle;
-            t = new Thread(this);
             t.start();
         }
     }
@@ -193,6 +188,7 @@ class ArmDriver implements Runnable {
             t = null;                       // set t to null for future threads.
         }
     }
+    
 
     public void run() {
         arm.robot.launchpadWrapper.setLED("yellow");
@@ -203,6 +199,7 @@ class ArmDriver implements Runnable {
         int vt1 = 0; // counting variale for velocity calculations for joint 1 and joint2
         int vt2 = 0;
 
+        int maxVT1 =0;
         double startingDelta1=Math.abs(joint1EndAngle-arm.joint1Encoder.getAngle());
         double startingDelta2=Math.abs(joint2EndAngle-arm.joint2Encoder.getAngle());
         double currentDelta1;
@@ -210,11 +207,12 @@ class ArmDriver implements Runnable {
 
         while(true){
 
-            if (Thread.interrupted()) {                     // call armDriver.interrupt; to set the interrupt flag and enter this if statment
+           if (Thread.interrupted()) {                     // call armDriver.interrupt; to set the interrupt flag and enter this if statment
                 System.out.println("arm driver interrupted");
                 arm.armIdler.setBothJoints(false);
                 return;
             }
+            
 
             double joint1CurrentAngle = arm.joint1Encoder.getAngle();
             double joint2CurrentAngle = arm.joint2Encoder.getAngle();
@@ -227,10 +225,14 @@ class ArmDriver implements Runnable {
                 arm.joint1Controller.set(calcSpeed(vt1,false));
             }
             else{
-                if(!joint1Done){        //if the arm is done but the boolean has not been set
-                    joint1Done = true;
+                joint1Done = true;
+                if(joint2Done){
+                    arm.joint1Controller.stopMotor();
+                    arm.armIdler.setBothJoints(true);;
+                }else{
+                    arm.joint1Controller.stopMotor();
                     arm.armIdler.setJoint1(true);
-                }
+            }
             }
             currentDelta1 = Math.abs(joint1EndAngle - joint1CurrentAngle);
 
@@ -239,9 +241,16 @@ class ArmDriver implements Runnable {
             } else {
                 vt1--;
             }
-            System.out.println("vt1 = " + vt1);
-            System.out.println("currentdelta1 = " + currentDelta1);
-            System.out.println("startingdelta1 = " + startingDelta1);
+            if(vt1>maxVT1){
+                maxVT1=vt1;
+            }
+            
+            //System.out.println("vt1 = " + vt1);
+            //System.out.println("currentdelta1 = " + currentDelta1);
+            //System.out.println("startingdelta1 = " + startingDelta1);
+            //System.out.println("joint1Done = "+joint1Done);
+
+            //TODO: uncomment joint 2 control
             /*
             //Joint 2 control
             if(joint2CurrentAngle<joint2EndAngle-armJoint2Tolerance){
@@ -266,13 +275,17 @@ class ArmDriver implements Runnable {
                 vt2--;
             }
             */
+
+            //TODO: change to join1Done  && joint2Done
             if(joint1Done){
+                vt1=0;
+                vt2=0;
                 break;
             }
             
         }
+        System.out.println("maxVT1 = "+maxVT1);
         t = null;
-        arm.isArmDriverWorking = false;
         arm.robot.launchpadWrapper.setLED("teamColor");
     }
 
@@ -290,8 +303,8 @@ class ArmDriver implements Runnable {
         // desmos graph: https://www.desmos.com/calculator/kppwi6pzt1
 
         double c = 3;
-        double k = 0.01;
-        double a = 1;
+        double k = 0.007;
+        double a = 0.5;
 
         if (positive) {
             return (((Math.atan(k * vt - c) * 2 / Math.PI) + 1) * (a / 2));
@@ -334,7 +347,7 @@ class ArmIdler implements Runnable {
         joint2Encoder = arm.joint2Encoder;
 
         joint1CorrectionSpeed = 0.02; // correction speed of the motors, the higher the speed, the more likely
-                                      // osscilation will be.
+                                      // oscilation will be.
         joint2CorrectionSpeed = 0.02;
 
         // selection
@@ -372,7 +385,6 @@ class ArmIdler implements Runnable {
             t.start();
         } else { // if called when idler is already running, interrupt it and create the new
                  // idler
-            Thread currentThread = t;
             interrupt(); // calls the interrupt method to begin stopping the current thread
             start(selection); // starts a new thread
         }
@@ -398,6 +410,7 @@ class ArmIdler implements Runnable {
         joint2Start = joint2Encoder.getAngle();
 
         while (true) {
+
             if (Thread.interrupted()) { // call armIdler.interrupt; to set the interrupt flag and enter this if statment
                 System.out.println("arm idle interrupted");
                 return;
