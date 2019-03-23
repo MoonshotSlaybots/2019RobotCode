@@ -1,5 +1,7 @@
 package frc.robot;
 
+import com.ctre.phoenix.motorcontrol.can.VictorSPX;
+import com.ctre.phoenix.motorcontrol.can.VictorSPX;
 import com.ctre.phoenix.motorcontrol.can.WPI_TalonSRX;
 import com.ctre.phoenix.motorcontrol.can.WPI_VictorSPX;
 
@@ -14,9 +16,6 @@ public class Arm {
     ArmEncoder joint2Encoder;
     SpeedController joint1Controller;
     SpeedController joint2Controller;
-    SpeedController ballIntakeController1;
-    SpeedController ballIntakeController2;
-    SpeedControllerGroup ballIntakeGroup;
 
     Piston suctionPiston;
 
@@ -37,12 +36,9 @@ public class Arm {
     public Arm(Robot robot, int joint1EncoderPort, int joint2EncoderPort) {
         this.robot = robot;
         joint1Controller = new CANSparkMax(7, CANSparkMaxLowLevel.MotorType.kBrushless);
-        joint2Controller = new WPI_TalonSRX(8);
-        ballIntakeController1 = new WPI_TalonSRX(9);
-        ballIntakeController2 = new WPI_VictorSPX(10);
-        ballIntakeGroup = new SpeedControllerGroup(ballIntakeController1, ballIntakeController2);
+        joint2Controller = new WPI_VictorSPX(8);
 
-        // suctionPiston = new Piston(0, 1);
+        suctionPiston = new Piston(0, 1);
 
         joint1Encoder = new ArmEncoder(joint1EncoderPort);
         joint2Encoder = new ArmEncoder(joint2EncoderPort);
@@ -71,15 +67,6 @@ public class Arm {
      */
     public void setJoint2Controller(double speed) {
         joint2Controller.set(speed);
-    }
-
-    /**
-     * set the speed of the motor cotrolling the ball intake
-     * 
-     * @param speed a double from -1 to 1
-     */
-    public void setBallIntake(double speed) {
-        ballIntakeGroup.set(speed);
     }
 
     /**
@@ -249,11 +236,9 @@ class ArmDriver implements Runnable {
             //System.out.println("currentdelta1 = " + currentDelta1);
             //System.out.println("startingdelta1 = " + startingDelta1);
             //System.out.println("joint1Done = "+joint1Done);
-
-            //TODO: uncomment joint 2 control
-            /*
+            
             //Joint 2 control
-            if(joint2CurrentAngle<joint2EndAngle-armJoint2Tolerance){
+            if(joint2CurrentAngle<=joint2EndAngle-armJoint2Tolerance){
                 arm.joint2Controller.set(calcSpeed(vt2,true));
             }
             else if(joint2CurrentAngle>joint2EndAngle+armJoint2Tolerance){
@@ -262,9 +247,11 @@ class ArmDriver implements Runnable {
             else{
                 joint2Done = true;
                 if(joint1Done){
-                    arm.armIdler.start("both");
+                    arm.joint1Controller.stopMotor();
+                    arm.armIdler.setBothJoints(true);
                 }else{
-                    arm.armIdler.start("joint2");
+                    arm.joint1Controller.stopMotor();
+                    arm.armIdler.setJoint2(true);
                 }
             }
 
@@ -274,10 +261,9 @@ class ArmDriver implements Runnable {
             } else {
                 vt2--;
             }
-            */
+            
 
-            //TODO: change to join1Done  && joint2Done
-            if(joint1Done){
+            if(joint1Done && joint2Done){
                 vt1=0;
                 vt2=0;
                 break;

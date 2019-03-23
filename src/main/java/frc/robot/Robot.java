@@ -14,6 +14,8 @@ import edu.wpi.first.wpilibj.TimedRobot;
 import edu.wpi.first.wpilibj.drive.MecanumDrive;
 import edu.wpi.cscore.UsbCamera;
 import edu.wpi.first.cameraserver.CameraServer;
+import edu.wpi.first.wpilibj.DigitalInput;
+import edu.wpi.first.wpilibj.DigitalOutput;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.Encoder;
 import edu.wpi.first.wpilibj.PowerDistributionPanel;
@@ -41,9 +43,12 @@ public class Robot extends TimedRobot {
   Encoder encoderBL;        
   UltrasonicSensor leftUS;
   UltrasonicSensor rightUS;
+
+  DigitalInput backLiftStop;
+  DigitalInput frontLiftStop;
+
   //create the drive, PDP, and Gyro
   MecanumDrive drive;
-  PowerDistributionPanel pdp;
   AHRS gyro;
 // create variables for vision system and camera 
   CameraServer driveCamServ = CameraServer.getInstance();
@@ -58,6 +63,9 @@ public class Robot extends TimedRobot {
   boolean gripperMoving;
 
  //tweaking variables
+  double liftSpeed = 0.1;
+  double liftIdleSpeed = 0.01;
+
   double rotationTolerance = 0.1;       //for auto rotation, stops plus or minus this angle,                                      
   double distanceTolerance = 10;        //prevents rocking back and forth
   double armJoint1Tolerance = 0.1;
@@ -65,6 +73,7 @@ public class Robot extends TimedRobot {
   // stabilizes straight line movement. larger numbers corrects deviation faster
   double driveXRotation = 0.05;   
   double driveYRotation = 0.05;
+  double liftOffset = 0.01;
 
   //loop control variables, forces some methods to only run once while a button is pressed
   int boomStopCounter = 0;
@@ -78,31 +87,38 @@ public class Robot extends TimedRobot {
     FL = new WPI_VictorSPX(3);
     FR = new WPI_VictorSPX(4);
 
+
     frontLift = new CANSparkMax(5, CANSparkMaxLowLevel.MotorType.kBrushless);
     backLift =  new CANSparkMax(6, CANSparkMaxLowLevel.MotorType.kBrushless);
+
+    backLift.setInverted(true);
 
     arm = new Arm(this, 0, 1);
     boomMoving = false;
     gripperMoving = false;
 
+
     //practice robot speed contollers
-    BL= new WPI_TalonSRX(1);
-    BR= new WPI_TalonSRX(2);
-    FL= new WPI_TalonSRX(4);
-    FR= new WPI_TalonSRX(3);
+    //BL= new WPI_TalonSRX(1);
+    //BR= new WPI_TalonSRX(2);
+    //FL= new WPI_TalonSRX(4);
+    //FR= new WPI_TalonSRX(3);
+
+    backLiftStop = new DigitalInput(7);
+    frontLiftStop = new DigitalInput(8);
 
     //create the encoders
-    encoderFL = new Encoder(0,1);                                  
-    encoderFL.setDistancePerPulse((double) 1/1024 * 18.850);        //set the distance per pulse of encoder, 1024 pulses per rotation of rod
+    //encoderFL = new Encoder(0,1);                                  
+    //encoderFL.setDistancePerPulse((double) 1/1024 * 18.850);        //set the distance per pulse of encoder, 1024 pulses per rotation of rod
                                                                   //wheel circumfrence = 18.850 in
-    encoderFR = new Encoder(2,3);                                  //create the encoder 
-    encoderFR.setDistancePerPulse((double) 1/1024 * 18.850);
+    //encoderFR = new Encoder(2,3);                                  //create the encoder 
+    //encoderFR.setDistancePerPulse((double) 1/1024 * 18.850);
 
-    encoderBL = new Encoder(4,5);                                  //create the encoder 
-    encoderBL.setDistancePerPulse((double) 1/1024 * 18.850);
+  encoderBL = new Encoder(4,5);                                  //create the encoder 
+    //encoderBL.setDistancePerPulse((double) 1/1024 * 18.850);
 
-    encoderBR = new Encoder(6,7);                                  //create the encoder 
-    encoderBR.setDistancePerPulse((double) 1/1024 * 18.850);
+    //encoderBR = new Encoder(6,7);                                  //create the encoder 
+    //encoderBR.setDistancePerPulse((double) 1/1024 * 18.850);
 
     // create the ultrasonic sensors
     leftUS = new UltrasonicSensor(3);
@@ -113,7 +129,6 @@ public class Robot extends TimedRobot {
     drive.setSafetyEnabled(false);
     gyro = new AHRS(SPI.Port.kMXP);             // creating Gyro
     gyro.reset();                               //sets the gyro to a heading of 0
-    pdp = new PowerDistributionPanel();      // creating Power Distributor Panel
 
     // creating the controller
     launchpadWrapper = new LaunchpadWrapper(2);
@@ -162,12 +177,25 @@ public class Robot extends TimedRobot {
   //------------------------------------------------------------------------------------------------------------------------------------------
   @Override
   public void autonomousInit() {
+    gyro.reset();             //calibrate the gyro, the current bot angle is now 0 degrees
+
+    arm.armIdler.start("joint1");
+
+    
+    boomMoving=false;
+    gripperMoving=false;
+
+
+    boomStopCounter =0;
+    gripperStopCounter=0;
    
   }
 
   //------------------------------------------------------------------------------------------------------------------------------------------
   @Override
   public void autonomousPeriodic() {
+    drive.driveCartesian(buttonManager.controller.getX(), buttonManager.controller.getY()*-1, buttonManager.controller.getRawAxis(4));
+
     
     }
   //------------------------------------------------------------------------------------------------------------------------------------------
@@ -191,6 +219,7 @@ public class Robot extends TimedRobot {
   public void teleopPeriodic() {
     buttonManager.updateButtons();
 
+  
     drive.driveCartesian(buttonManager.controller.getX(), buttonManager.controller.getY()*-1, buttonManager.controller.getRawAxis(4));
 
 
@@ -237,54 +266,66 @@ public class Robot extends TimedRobot {
       }else{gripperStopCounter++;}
     } 
 
-    if(buttonManager.controller.getRawButton(3)){         //red button on controller
-        rotateBot(180);                    
-      }
-
+    /*
     //front and back ascend
-    if(buttonManager.isFA()|| buttonManager.isBA()){
-      frontLift.set(1);
-      backLift.set(1);
+    
+    System.out.println("FA = " + buttonManager.isFA()+" BA = " + buttonManager.isBA());
+    if(buttonManager.isFA()){
+      System.out.println("do the do");
+      //if(frontLiftStop.get()){
+        frontLift.set(liftSpeed);
+      }
+      //}
+      //frontLift.set(liftSpeed-0.3);
+      //frontLift.set(liftSpeed-(gyro.getPitch()*liftOffset));
+
+      //if(backLiftStop.get()){
+    else if(buttonManager.isBA()){
+      System.out.println("do the do");
+      backLift.set(liftSpeed);
+     // }
     }
     else{
-      frontLift.set(0);
-      backLift.set(0);
+      frontLift.set(liftIdleSpeed);
+      backLift.set(liftIdleSpeed);
     }
 
     //front descend 
     if(buttonManager.isFD()){
-      frontLift.set(-1);
+      frontLift.set(-liftSpeed);
     }else{
-      frontLift.set(0);
+      frontLift.set(liftIdleSpeed);
     }
 
     //back descend
     if(buttonManager.isBD()){
-      backLift.set(-1);
+      backLift.set(-liftSpeed);
     }else{
-      backLift.set(0);
+      backLift.set(liftIdleSpeed);
     }
 
+*/
 
+if(buttonManager.isFA()){
+  frontLift.set(0.1);
+}else if(buttonManager.isFD()){
+  frontLift.set(-0.1);
+}else{
+  frontLift.set(0.01);
+}
+
+if(buttonManager.isBA()){
+  backLift.set(0.1);
+}else if(buttonManager.isBD()){
+  backLift.set(-0.1);
+}else{
+  backLift.set(0.01);
+}
     //hatch control (switch)
     if(buttonManager.ishtp()){            //hatch pickup
       arm.setSuction(true);
     }else if (buttonManager.ishtr()){     //hatch release
       arm.setSuction(false);
-    }
-
-    //ball pickup
-    if(buttonManager.isBp()){   
-      arm.setBallIntake(1);
-    }else{
-      arm.setBallIntake(0);
-    }
-
-    //ball release
-    if(buttonManager.isBr()){
-      arm.setBallIntake(-1);
-    }else{
-      arm.setBallIntake(0);
     }
 
     //set arm positions
@@ -304,28 +345,59 @@ public class Robot extends TimedRobot {
   }
   //------------------------------------------------------------------------------------------------------------------------------------------
   public void testInit() {
-    launchpadWrapper.setLED("red");
-    gyro.reset();             //calibrate the gyro, the current bot angle is now 0 degrees
+    //launchpadWrapper.setLED("red");
+    //gyro.reset();             //calibrate the gyro, the current bot angle is now 0 degrees
 
-    arm.armIdler.start("joint1");
+   // arm.armIdler.start("joint1");
   }
    
   //------------------------------------------------------------------------------------------------------------------------------------------
   @Override
   public void testPeriodic() {
     buttonManager.updateButtons();
-
-    if (buttonManager.isHtl()){
-      System.out.println("arm set low");
-      arm.moveArm("hatch low");
+    System.out.println("Front = " + frontLiftStop.get() + "    back = " + backLiftStop.get());
+    /*
+    if(buttonManager.isFA()){
+      frontLift.set(0.1);
+    }else{
+      frontLift.set(0.01);
     }
 
-    if(buttonManager.isHtm()){
-      System.out.println("arm set med");
-      arm.moveArm("hatch medium");
-    }    
+    if(buttonManager.isBA()){
+      backLift.set(0.1);
+    }else{
+      backLift.set(0.01);
+    }
 
-   }
+    if(buttonManager.isFD()){
+      frontLift.set(-0.1);
+    }else{
+      frontLift.set(0.01);
+    }
+
+    if(buttonManager.isBD()){
+      backLift.set(-0.1);
+    }else{
+      backLift.set(0.01);
+    }
+    */
+
+    if(buttonManager.isFA()){
+      frontLift.set(0.1);
+    }else if(buttonManager.isFD()){
+      frontLift.set(-0.1);
+    }else{
+      frontLift.set(0.01);
+    }
+
+    if(buttonManager.isBA()){
+      backLift.set(0.1);
+    }else if(buttonManager.isBD()){
+      backLift.set(-0.1);
+    }else{
+      backLift.set(0.01);
+    }
+  }
   //------------------------------------------------------------------------------------------------------------------------------------------
   /**
    * For automatic rotations.
@@ -472,13 +544,13 @@ public class Robot extends TimedRobot {
   public void moveBotY(double distance, double speed){
     enableMoveBotY=true;
     gyro.reset();
-    double startDist = encoderFR.getDistance();
+    double startDist = encoderBL.getDistance();
     double endDist = startDist + distance;
-    double currentDist = encoderFR.getDistance();
+    double currentDist = encoderBL.getDistance();
     speed = Math.abs(speed);
 
     while(enableMoveBotY){  
-      currentDist=encoderFR.getDistance();                     //loop this until the return keyword is hit or enable move bot y is false
+      currentDist=encoderBL.getDistance();                     //loop this until the return keyword is hit or enable move bot y is false
       double angle = gyro.getAngle();
       if(currentDist<endDist-distanceTolerance){               //if current distance is less than end distance, it will continue to move
         drive.driveCartesian(0, speed, -angle*driveYRotation);
@@ -504,13 +576,13 @@ public class Robot extends TimedRobot {
   public void moveBotX(double distance, double speed){
     enableMoveBotX=true;
     gyro.reset();
-    double startDist = encoderFR.getDistance();
+    double startDist = encoderBL.getDistance();
     double endDist = startDist + distance;
-    double currentDist = encoderFR.getDistance();
+    double currentDist = encoderBL.getDistance();
   
     speed = Math.abs(speed);
     while(enableMoveBotX){     
-      currentDist=encoderFR.getDistance();
+      currentDist=encoderBL.getDistance();
       double angle = gyro.getAngle();                                          //loop this until the return keyword is hit
       if(currentDist<endDist-distanceTolerance){               //if current distance is less than end distance, it will continue to move
         drive.driveCartesian(0, speed, -angle*driveXRotation);
