@@ -127,7 +127,10 @@ public class ButtonManager{
     public boolean isGtb() {
         return this.gtb;
     }
-
+    /**
+     * boom down
+     * @return A boolean, true of the button is pressed, else, false.
+     */
     public boolean isBd() {
         return this.bd;
     }
@@ -156,6 +159,10 @@ public class ButtonManager{
         return this.BA;
     }
 
+    /**
+     * Back lift down, (lower frame, raise wheels)
+     * @return A boolean, true if the button is pressed, else, false.
+     */
     public boolean isBD() {
         return this.BD;
     }

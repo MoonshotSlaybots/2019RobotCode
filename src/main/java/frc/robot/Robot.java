@@ -5,9 +5,6 @@
 /* the project.                                                               */
 /*----------------------------------------------------------------------------*/
 
-//this is a test to revert a commit
-//revert, test 2
-
 package frc.robot;
 
 import edu.wpi.first.wpilibj.SpeedController;
@@ -16,10 +13,8 @@ import edu.wpi.first.wpilibj.drive.MecanumDrive;
 import edu.wpi.cscore.UsbCamera;
 import edu.wpi.first.cameraserver.CameraServer;
 import edu.wpi.first.wpilibj.DigitalInput;
-import edu.wpi.first.wpilibj.DigitalOutput;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.Encoder;
-import edu.wpi.first.wpilibj.PowerDistributionPanel;
 import edu.wpi.first.wpilibj.SPI;
 
 import com.ctre.phoenix.motorcontrol.can.WPI_TalonSRX;
@@ -66,6 +61,8 @@ public class Robot extends TimedRobot {
  //tweaking variables
   double liftSpeed = 0.1;
   double liftIdleSpeed = 0.01;
+  double liftOffset = 0.01;
+  double liftGyroConstant = 0.008;
 
   double rotationTolerance = 0.1;       //for auto rotation, stops plus or minus this angle,                                      
   double distanceTolerance = 10;        //prevents rocking back and forth
@@ -74,7 +71,6 @@ public class Robot extends TimedRobot {
   // stabilizes straight line movement. larger numbers corrects deviation faster
   double driveXRotation = 0.05;   
   double driveYRotation = 0.05;
-  double liftOffset = 0.01;
 
   //loop control variables, forces some methods to only run once while a button is pressed
   int boomStopCounter = 0;
@@ -115,7 +111,7 @@ public class Robot extends TimedRobot {
     //encoderFR = new Encoder(2,3);                                  //create the encoder 
     //encoderFR.setDistancePerPulse((double) 1/1024 * 18.850);
 
-  encoderBL = new Encoder(4,5);                                  //create the encoder 
+    encoderBL = new Encoder(4,5);                                  //create the encoder 
     //encoderBL.setDistancePerPulse((double) 1/1024 * 18.850);
 
     //encoderBR = new Encoder(6,7);                                  //create the encoder 
@@ -140,6 +136,7 @@ public class Robot extends TimedRobot {
     // create variables for vision system and camera
     UsbCamera visionCamera = CameraServer.getInstance().startAutomaticCapture("visionCam",0);          //set camera settings
     visionCamera.setResolution(320, 240);
+    //TODO incrase camera exposure or delete manual exposure control
     visionCamera.setExposureManual(30);
     visionCamera.setFPS(20);
     visionCamera.setBrightness(20);
@@ -149,7 +146,8 @@ public class Robot extends TimedRobot {
     driveCam.setResolution(320, 240);
     driveCam.setFPS(20);
 
-
+    launchpadWrapper.updateTeamColor();
+    launchpadWrapper.setLED("teamColor");
     
   }
 
@@ -168,7 +166,7 @@ public class Robot extends TimedRobot {
     enableMoveBotY=false;
     enableMoveBotX=false;
     
-
+    launchpadWrapper.setLED("white");
   }
   //------------------------------------------------------------------------------------------------------------------------------------------
   public void disabledPeriodic() {
@@ -189,6 +187,8 @@ public class Robot extends TimedRobot {
 
     boomStopCounter =0;
     gripperStopCounter=0;
+
+    launchpadWrapper.setLED("yellow");
    
   }
 
@@ -202,8 +202,6 @@ public class Robot extends TimedRobot {
   //------------------------------------------------------------------------------------------------------------------------------------------
   @Override
   public void teleopInit() {
-    gyro.reset();             //calibrate the gyro, the current bot angle is now 0 degrees
-
     arm.armIdler.start("joint1");
 
     
@@ -213,6 +211,8 @@ public class Robot extends TimedRobot {
 
     boomStopCounter =0;
     gripperStopCounter=0;
+
+    launchpadWrapper.setLED("teamColor");
   }
 
   //------------------------------------------------------------------------------------------------------------------------------------------
@@ -260,68 +260,88 @@ public class Robot extends TimedRobot {
       arm.joint2Controller.set(-0.5);
 
     }else if(gripperMoving){
-      if(gripperStopCounter>=50){
-        arm.armIdler.setJoint2(true);;
+      if(gripperStopCounter>=20){
+        arm.armIdler.setJoint2(true);
         gripperMoving = false;
         gripperStopCounter=0;
       }else{gripperStopCounter++;}
     } 
 
+    //Lift control
+
     /*
-    //front and back ascend
-    
-    System.out.println("FA = " + buttonManager.isFA()+" BA = " + buttonManager.isBA());
+    //old lift control
     if(buttonManager.isFA()){
-      System.out.println("do the do");
-      //if(frontLiftStop.get()){
-        frontLift.set(liftSpeed);
-      }
-      //}
-      //frontLift.set(liftSpeed-0.3);
-      //frontLift.set(liftSpeed-(gyro.getPitch()*liftOffset));
-
-      //if(backLiftStop.get()){
-    else if(buttonManager.isBA()){
-      System.out.println("do the do");
-      backLift.set(liftSpeed);
-     // }
-    }
-    else{
-      frontLift.set(liftIdleSpeed);
-      backLift.set(liftIdleSpeed);
-    }
-
-    //front descend 
-    if(buttonManager.isFD()){
+      frontLift.set(liftSpeed);
+    }else if(buttonManager.isFD()){
       frontLift.set(-liftSpeed);
     }else{
       frontLift.set(liftIdleSpeed);
     }
 
-    //back descend
-    if(buttonManager.isBD()){
+    if(buttonManager.isBA()){
+      backLift.set(liftSpeed);
+    }else if(buttonManager.isBD()){
       backLift.set(-liftSpeed);
     }else{
       backLift.set(liftIdleSpeed);
     }
+    */
 
-*/
 
-if(buttonManager.isFA()){
-  frontLift.set(0.1);
-}else if(buttonManager.isFD()){
-  frontLift.set(-0.1);
-}else{
-  frontLift.set(0.01);
-}
+    /*
 
-if(buttonManager.isBA()){
-  backLift.set(0.1);
-}else if(buttonManager.isBD()){
-  backLift.set(-0.1);
-}else{
-  backLift.set(0.01);
-}
+    //lift control with constant offset
+    if (buttonManager.isFD() && buttonManager.isBD()){          //if front down AND back down are pressed, set both front and back to lower
+      //TODO do the front and back lifts lower at the same rate?
+      frontLift.set(-liftSpeed);
+      backLift.set(-liftSpeed);
+    }
+    else{                                                       //if both down are not pressed, continue to other scenarios
+      if(buttonManager.isFA() || buttonManager.isBA()){         //if either up buttons, raise both lifts, with an offset on the front to compensate
+        frontLift.set(liftSpeed - liftOffset);
+        backLift.set(liftSpeed);
+      }else if(buttonManager.isFD()){                           //if front down, lower front, set back to idle
+        frontLift.set(-liftSpeed);
+        backLift.set(liftIdleSpeed);
+      }else if (buttonManager.isBD()){                          //if back down, lower back, and set front to idle
+        backLift.set(-liftSpeed);
+        frontLift.set(liftIdleSpeed);
+      }else{
+        frontLift.set(liftIdleSpeed);
+        backLift.set(liftIdleSpeed);
+      }
+    }
+
+    */
+
+    //lift control with gyro stabilization and end stop switches
+
+    if (buttonManager.isFD() && buttonManager.isBD()){          //if front down AND back down are pressed, set both front and back to lower
+      //TODO do the front and back lifts lower at the same rate?
+      frontLift.set(-liftSpeed);
+      backLift.set(-liftSpeed);
+    }else{                                                      //if both down are not pressed, continue to other scenarios
+      if(buttonManager.isFA() || buttonManager.isBA()){         //either up buttons, raise both lifts, with an offset on the front to compensate
+        if(frontLiftStop.get()){                                //switches return true when they are NOT pressed
+          frontLift.set(liftSpeed - (gyro.getPitch() * liftGyroConstant));
+        }else{frontLift.set(liftIdleSpeed);}
+
+        if(backLiftStop.get()){
+          backLift.set(liftSpeed);
+        }else{backLift.set(liftIdleSpeed);}
+
+      }else if(buttonManager.isFD()){                           //if front down, lower front, set back to idle
+        frontLift.set(-liftSpeed);
+        backLift.set(liftIdleSpeed);
+      }else if (buttonManager.isBD()){                          //if back down, lower back, and set front to idle
+        backLift.set(-liftSpeed);
+        frontLift.set(liftIdleSpeed);
+      }else{
+        frontLift.set(liftIdleSpeed);
+        backLift.set(liftIdleSpeed);
+      }
+    }
     //hatch control (switch)
     if(buttonManager.ishtp()){            //hatch pickup
       arm.setSuction(true);

@@ -120,7 +120,12 @@ public class LaunchpadWrapper {
                 whiteState=true;
                 break;
             case "teamColor":
-                this.setLED(teamColor);
+                try{
+                    this.setLED(teamColor);
+                }catch(Exception e){
+                    DriverStation.reportError("Launchpad: team color could not be found", true);
+                    this.setLED("red");
+                }
                 break;
             case "off":
                 //colors already cleared at beginning
@@ -235,10 +240,14 @@ class BlinkLED implements Runnable{             //a class to handle blinking the
                     newWhiteState=true;
                     break;
                 case "teamColor":
-                    if(launchpadWrapper.getTeamColor()=="red"){
-                        newRedState=true;
-                    }else{
-                        newBlueState=true;
+                try{
+                        if(launchpadWrapper.getTeamColor()=="red"){
+                            newRedState=true;
+                        }else{
+                            newBlueState=true;
+                        }
+                    }catch(Exception e){
+                        DriverStation.reportError("Launchpad: team color could not be found", true);      
                     }
                     break;
                 default:                                                        //if the input is not defined, throw an error

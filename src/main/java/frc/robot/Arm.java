@@ -42,6 +42,7 @@ public class Arm {
 
         joint1Encoder = new ArmEncoder(joint1EncoderPort);
         joint2Encoder = new ArmEncoder(joint2EncoderPort);
+        //TODO remeasure arm starting angle
         joint1Encoder.setStartAngle(35);
         joint2Encoder.setStartAngle(350);
 
