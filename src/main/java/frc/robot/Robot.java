@@ -61,7 +61,7 @@ public class Robot extends TimedRobot {
  //tweaking variables
   double liftSpeed = 0.1;
   double liftIdleSpeed = 0.01;
-  double liftOffset = 0.01;
+  double liftOffset = 0.005;
   double liftGyroConstant = 0.008;
 
   double rotationTolerance = 0.1;       //for auto rotation, stops plus or minus this angle,                                      
@@ -166,6 +166,7 @@ public class Robot extends TimedRobot {
     enableMoveBotY=false;
     enableMoveBotX=false;
     
+    launchpadWrapper.updateTeamColor();
     launchpadWrapper.setLED("white");
   }
   //------------------------------------------------------------------------------------------------------------------------------------------
@@ -195,6 +196,7 @@ public class Robot extends TimedRobot {
   //------------------------------------------------------------------------------------------------------------------------------------------
   @Override
   public void autonomousPeriodic() {
+    //TODO copy teleop code to auto
     drive.driveCartesian(buttonManager.controller.getX(), buttonManager.controller.getY()*-1, buttonManager.controller.getRawAxis(4));
 
     
@@ -212,6 +214,7 @@ public class Robot extends TimedRobot {
     boomStopCounter =0;
     gripperStopCounter=0;
 
+    launchpadWrapper.updateTeamColor();
     launchpadWrapper.setLED("teamColor");
   }
 
@@ -314,6 +317,7 @@ public class Robot extends TimedRobot {
     }
 
     */
+    
 
     //lift control with gyro stabilization and end stop switches
 
@@ -342,6 +346,8 @@ public class Robot extends TimedRobot {
         backLift.set(liftIdleSpeed);
       }
     }
+
+    
     //hatch control (switch)
     if(buttonManager.ishtp()){            //hatch pickup
       arm.setSuction(true);
