@@ -15,6 +15,7 @@ import edu.wpi.first.cameraserver.CameraServer;
 import edu.wpi.first.wpilibj.DigitalInput;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.Encoder;
+import edu.wpi.first.wpilibj.Joystick;
 import edu.wpi.first.wpilibj.SPI;
 
 import com.ctre.phoenix.motorcontrol.can.WPI_TalonSRX;
@@ -53,6 +54,7 @@ public class Robot extends TimedRobot {
 // create joystick for controllers, buttons, and switches
   LaunchpadWrapper launchpadWrapper;
   ButtonManager buttonManager; 
+  Joystick xbox;
 
   Arm arm;
   boolean boomMoving;    //boolean used to tell if boom and gripper is moving
@@ -130,6 +132,7 @@ public class Robot extends TimedRobot {
     // creating the controller
     launchpadWrapper = new LaunchpadWrapper(2);
     buttonManager = new ButtonManager(this);
+    xbox = new Joystick(3);
     
 
 
@@ -155,8 +158,8 @@ public class Robot extends TimedRobot {
   public void disabledInit() {
 
     //interrupt all multithreaded taskes
-    arm.armDriver.interrupt();
-    arm.armIdler.interrupt();
+  //  arm.armDriver.interrupt();
+  //  arm.armIdler.interrupt();
     vision.interrupt();
 
     //set all enable variables to false to stop any other automatic methods
@@ -179,7 +182,7 @@ public class Robot extends TimedRobot {
   public void autonomousInit() {
     gyro.reset();             //calibrate the gyro, the current bot angle is now 0 degrees
 
-    arm.armIdler.start("joint1");
+  //  arm.armIdler.start("joint1");
 
     
     boomMoving=false;
@@ -204,7 +207,8 @@ public class Robot extends TimedRobot {
   //------------------------------------------------------------------------------------------------------------------------------------------
   @Override
   public void teleopInit() {
-    arm.armIdler.start("joint1");
+    gyro.reset();
+  //  arm.armIdler.start("joint1");
 
     
     boomMoving=false;
@@ -222,11 +226,11 @@ public class Robot extends TimedRobot {
   @Override
   public void teleopPeriodic() {
     buttonManager.updateButtons();
-
+    System.out.println(gyro.getAngle());
   
-    drive.driveCartesian(buttonManager.controller.getX(), buttonManager.controller.getY()*-1, buttonManager.controller.getRawAxis(4));
+    drive.driveCartesian(xbox.getX(), xbox.getY()*-1, xbox.getRawAxis(4));
 
-
+    /*
     //manual arm movement
     if(buttonManager.isBu()){           //boom up
       if(!boomMoving){arm.armIdler.setJoint1(false);}         //if boom was not moving before this loop  
@@ -269,7 +273,7 @@ public class Robot extends TimedRobot {
         gripperStopCounter=0;
       }else{gripperStopCounter++;}
     } 
-
+    */
     //Lift control
 
     /*
@@ -347,7 +351,7 @@ public class Robot extends TimedRobot {
       }
     }
 
-    
+    /*
     //hatch control (switch)
     if(buttonManager.ishtp()){            //hatch pickup
       arm.setSuction(true);
@@ -368,7 +372,7 @@ public class Robot extends TimedRobot {
       arm.moveArm("hatch medium");
     }else if (buttonManager.isHtl()){
       arm.moveArm("hatch low");
-    }
+    }*/
   }
   //------------------------------------------------------------------------------------------------------------------------------------------
   public void testInit() {
@@ -382,48 +386,12 @@ public class Robot extends TimedRobot {
   @Override
   public void testPeriodic() {
     buttonManager.updateButtons();
-    System.out.println("Front = " + frontLiftStop.get() + "    back = " + backLiftStop.get());
-    /*
-    if(buttonManager.isFA()){
-      frontLift.set(0.1);
-    }else{
-      frontLift.set(0.01);
-    }
-
-    if(buttonManager.isBA()){
-      backLift.set(0.1);
-    }else{
-      backLift.set(0.01);
-    }
-
-    if(buttonManager.isFD()){
-      frontLift.set(-0.1);
-    }else{
-      frontLift.set(0.01);
-    }
-
-    if(buttonManager.isBD()){
-      backLift.set(-0.1);
-    }else{
-      backLift.set(0.01);
-    }
-    */
-
-    if(buttonManager.isFA()){
-      frontLift.set(0.1);
-    }else if(buttonManager.isFD()){
-      frontLift.set(-0.1);
-    }else{
-      frontLift.set(0.01);
-    }
-
-    if(buttonManager.isBA()){
-      backLift.set(0.1);
-    }else if(buttonManager.isBD()){
-      backLift.set(-0.1);
-    }else{
-      backLift.set(0.01);
-    }
+    arm.setJoint2Controller(buttonManager.controller.getRawAxis(1));
+  if(buttonManager.controller.getRawButton(2)){
+    arm.setSuction(true);
+  }else{
+    arm.setSuction(false);
+  }
   }
   //------------------------------------------------------------------------------------------------------------------------------------------
   /**
