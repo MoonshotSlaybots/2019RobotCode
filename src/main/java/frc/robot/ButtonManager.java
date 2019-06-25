@@ -11,6 +11,7 @@ public class ButtonManager{
     Joystick grip;
     Joystick wheels;
     Joystick controller;
+    Joystick xbox;
 
     boolean blh;
     boolean blm;
@@ -37,6 +38,8 @@ public class ButtonManager{
         controller = new Joystick(0); 
         wheels = new Joystick(1);
         grip = robot.getLaunchpadWrapper().launchpad;
+        xbox = new Joystick(3);
+
 
         // grip buttons. bl = ball load. ht= hatch. h = high. m = medium. l = low
         blh = grip.getRawButton(14);

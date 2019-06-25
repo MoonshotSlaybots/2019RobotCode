@@ -54,7 +54,7 @@ public class Robot extends TimedRobot {
 // create joystick for controllers, buttons, and switches
   LaunchpadWrapper launchpadWrapper;
   ButtonManager buttonManager; 
-  Joystick xbox;
+  
 
   Arm arm;
   boolean boomMoving;    //boolean used to tell if boom and gripper is moving
@@ -97,6 +97,7 @@ public class Robot extends TimedRobot {
     gripperMoving = false;
 
 
+
     //practice robot speed contollers
     //BL= new WPI_TalonSRX(1);
     //BR= new WPI_TalonSRX(2);
@@ -132,7 +133,6 @@ public class Robot extends TimedRobot {
     // creating the controller
     launchpadWrapper = new LaunchpadWrapper(2);
     buttonManager = new ButtonManager(this);
-    xbox = new Joystick(3);
     
 
 
@@ -158,8 +158,8 @@ public class Robot extends TimedRobot {
   public void disabledInit() {
 
     //interrupt all multithreaded taskes
-  //  arm.armDriver.interrupt();
-  //  arm.armIdler.interrupt();
+    arm.armDriver.interrupt();
+    arm.armIdler.interrupt();
     vision.interrupt();
 
     //set all enable variables to false to stop any other automatic methods
@@ -182,7 +182,7 @@ public class Robot extends TimedRobot {
   public void autonomousInit() {
     gyro.reset();             //calibrate the gyro, the current bot angle is now 0 degrees
 
-  //  arm.armIdler.start("joint1");
+    arm.setArmIdle();
 
     
     boomMoving=false;
@@ -208,7 +208,7 @@ public class Robot extends TimedRobot {
   @Override
   public void teleopInit() {
     gyro.reset();
-  //  arm.armIdler.start("joint1");
+    arm.armIdler.setBothJoints(true);
 
     
     boomMoving=false;
@@ -228,21 +228,21 @@ public class Robot extends TimedRobot {
     buttonManager.updateButtons();
     System.out.println(gyro.getAngle());
   
-    drive.driveCartesian(xbox.getX(), xbox.getY()*-1, xbox.getRawAxis(4));
+    drive.driveCartesian(buttonManager.controller.getRawAxis(0), buttonManager.controller.getRawAxis(1)*-1, buttonManager.controller.getRawAxis(4));
 
-    /*
+    
     //manual arm movement
     if(buttonManager.isBu()){           //boom up
       if(!boomMoving){arm.armIdler.setJoint1(false);}         //if boom was not moving before this loop  
       boomMoving = true;
       boomStopCounter=0;    
-      arm.joint1Controller.set(0.5);
+      arm.joint1Controller.set(0.25);
 
     }else if(buttonManager.isBd()){     //boom down
       if(!boomMoving){arm.armIdler.setJoint1(false);}         //if boom was not moving before this loop
       boomMoving = true;
       boomStopCounter =0;
-      arm.joint1Controller.set(-0.5);
+      arm.joint1Controller.set(-0.25);
 
     }else if (boomMoving){              //if no buttons are pressed, and boomMoving is true
       arm.joint1Controller.set(arm.joint1Controller.get()/2);
@@ -267,13 +267,13 @@ public class Robot extends TimedRobot {
       arm.joint2Controller.set(-0.5);
 
     }else if(gripperMoving){
-      if(gripperStopCounter>=20){
-        arm.armIdler.setJoint2(true);
+      if(gripperStopCounter>=5){
+        arm.armIdler.setJoint2(false);    //TODO: make true when encoder is installed on second joint
         gripperMoving = false;
         gripperStopCounter=0;
       }else{gripperStopCounter++;}
     } 
-    */
+    
     //Lift control
 
     /*
@@ -351,14 +351,14 @@ public class Robot extends TimedRobot {
       }
     }
 
-    /*
+    
     //hatch control (switch)
     if(buttonManager.ishtp()){            //hatch pickup
       arm.setSuction(true);
     }else if (buttonManager.ishtr()){     //hatch release
       arm.setSuction(false);
     }
-
+    /*
     //set arm positions
     if(buttonManager.isBlh()){
       arm.moveArm("ball high");
@@ -379,19 +379,13 @@ public class Robot extends TimedRobot {
     //launchpadWrapper.setLED("red");
     //gyro.reset();             //calibrate the gyro, the current bot angle is now 0 degrees
 
-   // arm.armIdler.start("joint1");
+    arm.setArmIdle();
   }
    
   //------------------------------------------------------------------------------------------------------------------------------------------
   @Override
   public void testPeriodic() {
-    buttonManager.updateButtons();
-    arm.setJoint2Controller(buttonManager.controller.getRawAxis(1));
-  if(buttonManager.controller.getRawButton(2)){
-    arm.setSuction(true);
-  }else{
-    arm.setSuction(false);
-  }
+    
   }
   //------------------------------------------------------------------------------------------------------------------------------------------
   /**

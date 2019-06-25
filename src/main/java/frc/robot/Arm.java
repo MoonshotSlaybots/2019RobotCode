@@ -2,6 +2,7 @@ package frc.robot;
 
 import com.ctre.phoenix.motorcontrol.can.WPI_VictorSPX;
 
+import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.SpeedController;
 import com.revrobotics.CANSparkMax;
 import com.revrobotics.CANSparkMaxLowLevel;
@@ -39,12 +40,12 @@ public class Arm {
         joint1Encoder = new ArmEncoder(joint1EncoderPort);
         joint2Encoder = new ArmEncoder(joint2EncoderPort);
         //TODO remeasure arm starting angle
-        joint1Encoder.setStartAngle(35);
+        joint1Encoder.setStartAngle(30);
         joint2Encoder.setStartAngle(350);
 
         armDriver = new ArmDriver(this);
         armIdler = new ArmIdler(this);
-        //armIdler.start("none");                 //begins the arm idler, but sets its state to none
+        armIdler.startArm("void");                 //begins the arm idler, but sets its state to none
     }
 
     /**
@@ -83,7 +84,7 @@ public class Arm {
      */
     public void setArmIdle(){
         //should be "both" not joint1
-        armIdler.start("joint1");
+        armIdler.startArm("joint1");
     }
 
     public void resetIdler(){
@@ -344,7 +345,7 @@ class ArmIdler implements Runnable {
      * @param selection A string that tells the idler what to control.
      *                  "joint1", "joint2", "both", or "none"
      */
-    public void start(String selection) { // starts the thread and calls the run method
+    public void startArm(String selection) { // starts the thread and calls the run method
         if (t == null) {
             switch (selection) {
             case "joint1":
@@ -357,11 +358,14 @@ class ArmIdler implements Runnable {
                 joint1 = true;
                 joint2 = true;
                 break;
-            case "none":
+            case "void":
                 joint1 = false;
                 joint2 = false;
+                break;
             default:
-                arm.robot.fancyErrorReport("arm idle failed, could not determain selection.", false);
+            
+            DriverStation.reportError("arm idle failed, could not determain selection.", true);
+
             }
             System.out.println("Starting thread");
             t = new Thread(this);
@@ -369,7 +373,7 @@ class ArmIdler implements Runnable {
         } else { // if called when idler is already running, interrupt it and create the new
                  // idler
             interrupt(); // calls the interrupt method to begin stopping the current thread
-            start(selection); // starts a new thread
+            startArm(selection); // starts a new thread
         }
     }
 
